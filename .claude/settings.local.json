@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(Move-Item _tmp\\\\* . -Force)",
+      "Bash(Move-Item _tmp\\\\.gitignore . -Force)",
+      "Bash(Remove-Item _tmp -Recurse -Force)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
+    ]
+  }
+}
