@@ -1,23 +1,26 @@
 import type { Exercise } from '../types/exercise'
 
 /*
- * Props is the TypeScript interface that defines what this component expects
- * from its parent. The parent must pass an object matching the Exercise type —
- * the compiler will catch a missing or mistyped field before the code runs.
+ * Two new props alongside exercise:
+ * - isSelected: the parent tells this item whether it is the active one
+ * - onSelect: a callback the parent passes down — the child calls it when
+ *   clicked, the parent decides what to do with the id. The child has no
+ *   opinion about what "selected" means globally; it only reports the event.
  */
 interface Props {
   exercise: Exercise
+  isSelected: boolean
+  onSelect: (id: string) => void
 }
 
-/*
- * The { exercise } syntax is destructuring — we pull the exercise prop out of
- * the Props object directly in the function signature rather than writing
- * props.exercise throughout. The JSX below is structurally identical to the
- * phase-01 version; only the hardcoded values are replaced by expressions.
- */
-function ExerciseListItem({ exercise }: Props) {
+function ExerciseListItem({ exercise, isSelected, onSelect }: Props) {
   return (
-    <li className="border border-gray-200 rounded-lg p-4">
+    <li
+      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+      }`}
+      onClick={() => onSelect(exercise.id)}
+    >
       <h2 className="text-lg font-semibold mb-2">{exercise.name}</h2>
       <ul className="text-sm text-gray-600 flex flex-col gap-1">
         <li><span className="font-medium">Category:</span> {exercise.category}</li>
