@@ -16,7 +16,6 @@ of a component completely clear before anything else is layered on top.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why JSX](#-why-jsx)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
@@ -75,21 +74,6 @@ Getting it into a component is a two-step problem: fetch it over HTTP, then
 pass it to the component that renders it. Both of those steps come in later
 phases. For now we hardcode the data directly in the component so the
 component itself is the only new concept.
-
----
-
-## 💡 Why JSX
-
-The browser cannot render a component directly — it only understands HTML,
-CSS, and JavaScript. JSX is a syntax extension that lets us describe the UI
-structure in markup-like notation inside a `.tsx` file. Vite compiles it down
-to plain `React.createElement(...)` calls before anything reaches the browser.
-
-JSX exists to make the tree structure of the UI visible at a glance. It is
-not HTML — it is a notation for describing React elements. Open
-[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx) and read
-it alongside the rendered output in the browser. The shape of the JSX and the
-shape of the DOM should match exactly.
 
 ---
 
