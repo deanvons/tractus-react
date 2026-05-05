@@ -183,6 +183,8 @@ component model were established; the data flow and visual design were not.
 | **`.map()`** | A JavaScript array method that transforms each item in an array into something else — in React, typically a JSX element. It returns a new array; it does not change the original. |
 | **Type / Interface** | A TypeScript definition that describes the shape of an object. Lets the compiler catch a wrong or missing prop before the code runs. |
 | **Tailwind utility class** | A single-purpose CSS class that applies one style rule. Composed directly in JSX rather than defined in a separate stylesheet. |
+| **Container component** | A component that owns data or logic and passes it down to children. `ExerciseList` is a container — it knows about the exercise array and decides what to render. |
+| **Presentational component** | A component that only renders what it receives via props. `ExerciseListItem` is presentational — it has no opinion about where its data comes from. |
 
 ---
 
@@ -211,6 +213,32 @@ a component that can render one.
 props and no knowledge of exercise data. Notice how little it does. That
 simplicity is intentional: feature components own their data, `App` owns the
 page structure.
+
+**Component tree**
+
+```mermaid
+graph TD
+  App["App\n(layout only)"]
+  ExList["ExerciseList\n(container — owns data)"]
+  ELI1["ExerciseListItem"]
+  ELI2["ExerciseListItem"]
+  ELI3["ExerciseListItem"]
+  ELIn["…"]
+
+  App --> ExList
+  ExList -->|"exercise={…}"| ELI1
+  ExList -->|"exercise={…}"| ELI2
+  ExList -->|"exercise={…}"| ELI3
+  ExList --> ELIn
+```
+
+`App` knows nothing about exercises. `ExerciseList` knows about the array but
+not what an individual exercise looks like. `ExerciseListItem` knows what an
+exercise looks like but not where it came from. Each component has one
+responsibility and one layer of knowledge.
+
+The arrows carry the prop — data flows down. Nothing flows up. That is the
+core rule of this phase.
 
 ---
 
@@ -268,6 +296,11 @@ later phase?
 3. Two components now share a relationship: `ExerciseList` knows about
    `ExerciseListItem`. As more components are added, how should we organise
    the `components` folder — and does it matter yet?
+4. `ExerciseList` is a container — it owns the data and decides what to render.
+   `ExerciseListItem` is presentational — it renders whatever it receives. This
+   separation is deliberate, but it is not a rule. When does collapsing the two
+   into a single component make more sense than keeping them separate? What
+   would you lose if you did?
 
 ---
 
