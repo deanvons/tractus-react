@@ -257,7 +257,7 @@ later phase?
 
 ---
 
-## 💭 Thought pieces for next time
+## 💭 Thought pieces for the next branch
 
 1. The exercise list is static — it renders once and never changes. What if
    we wanted to let the user select an exercise, or toggle between a list view

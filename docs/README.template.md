@@ -184,7 +184,7 @@ the phase scope.]
 
 ---
 
-## 💭 Thought pieces for next time
+## 💭 Thought pieces for the next branch
 
 [2–4 open questions this phase raises but does not answer. These become the
 "Resolving the thought pieces" section of the next branch's README. Write
