@@ -138,6 +138,14 @@ reusable but entirely static — no user interaction, no state.
 > interactive React application. Every hook, every state library, every form
 > input you will encounter from here on is built on top of this cycle.
 
+`useState` is a **hook** — a function React provides that lets you reach into
+the React runtime from inside a component. Hooks always start with `use`. They
+are how components access React features like state, lifecycle, and context
+without needing to be a class. We will encounter more hooks as the phases
+progress — `useEffect` in phase 04, and eventually custom hooks that wrap
+reusable logic into a single callable. For now: a hook is a function you call
+inside a component that gives it a capability it would not otherwise have.
+
 ---
 
 ## 🧑🏻‍🏫 Learning goals
