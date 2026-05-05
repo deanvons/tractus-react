@@ -181,6 +181,7 @@ inside a component that gives it a capability it would not otherwise have.
 | **Event handler** | A function attached to a user interaction — a click, a keystroke, a form submission. In React, event handlers are passed as props (`onClick`, `onChange`, etc.). |
 | **Callback prop** | A function passed from a parent to a child as a prop. The child calls it to tell the parent something happened — the only way data moves up the tree. |
 | **Conditional rendering** | Deciding what to render based on a value — a prop, a piece of state, or a derived expression. In JSX this is usually a ternary or a template string. |
+| **Hook** | A function provided by React (always prefixed with `use`) that lets a component access React features like state and lifecycle from inside a plain function. `useState` is the first one we use. |
 | **Lifting state** | Moving state up to a common ancestor so that multiple children can read or influence it. The rule: state lives at the lowest level that can see everyone who needs it. |
 
 ---
