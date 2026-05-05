@@ -80,31 +80,16 @@ component itself is the only new concept.
 
 ## 💡 Why JSX
 
-Writing UIs as function calls is correct but unreadable:
+The browser cannot render a component directly — it only understands HTML,
+CSS, and JavaScript. JSX is a syntax extension that lets us describe the UI
+structure in markup-like notation inside a `.tsx` file. Vite compiles it down
+to plain `React.createElement(...)` calls before anything reaches the browser.
 
-```js
-React.createElement('div', { className: 'card' },
-  React.createElement('h2', null, 'Back Squat'),
-  React.createElement('p', null, 'Legs')
-)
-```
-
-JSX is syntactic sugar over exactly this. The component you write:
-
-```jsx
-function ExerciseCard() {
-  return (
-    <div className="card">
-      <h2>Back Squat</h2>
-      <p>Legs</p>
-    </div>
-  )
-}
-```
-
-compiles to the `createElement` calls above. JSX exists to make the structure
-of the UI visible at a glance. It is not HTML — it is a notation for
-describing a tree of React elements.
+JSX exists to make the tree structure of the UI visible at a glance. It is
+not HTML — it is a notation for describing React elements. Open
+[`src/components/ExerciseCard.tsx`](src/components/ExerciseCard.tsx) and read
+it alongside the rendered output in the browser. The shape of the JSX and the
+shape of the DOM should match exactly.
 
 ---
 

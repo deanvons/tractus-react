@@ -64,6 +64,10 @@ what would we have to write if this did not exist? Use the framing:
 "This is plumbing. The library is automating tedious repetition.
 Make sure you know what it is doing before you let it."]
 
+[No code blocks in this section. Explain in prose and point students to the
+relevant file in "What to notice in the code". Students should read the
+codebase — not a copy of it pasted into the README.]
+
 ---
 
 ## ⏮️ What we built in the previous branch

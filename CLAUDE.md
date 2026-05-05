@@ -250,6 +250,9 @@ to Analyze and Evaluate.
 
 ## What to avoid
 
+- Do not put code blocks in README files for teaching purposes — use prose and
+  point students to the actual files via "What to notice in the code". The only
+  acceptable code blocks in a README are operational commands (npm run dev, etc.)
 - Do not use abstractions ahead of the current branch
 - Do not install a library before showing what it replaces
 - Do not commit tokens, secrets, or API keys
