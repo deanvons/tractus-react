@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Exercise } from '../types/exercise'
 import ExerciseListItem from './ExerciseListItem'
 
@@ -48,24 +49,33 @@ const exercises: Exercise[] = [
 
 function ExerciseList() {
   /*
+   * selectedId is null when nothing is selected and holds the exercise id
+   * when one is active. It lives here — not in ExerciseListItem — because
+   * only one item can be selected at a time, and enforcing that requires a
+   * single piece of state that can see all items at once.
+   *
+   * Calling setSelectedId triggers a re-render. React re-runs this function,
+   * computes isSelected fresh for each item, and updates only the items whose
+   * output changed. The rest are left untouched.
+   */
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  /*
    * Each ExerciseListItem receives one exercise as a prop via .map().
    * The key prop is required on every item in a list — React uses it to
    * track which item is which across re-renders. Without it, React has to
    * re-render the entire list on every change instead of only what changed.
    * We use the exercise id because it is stable and unique.
-   *
-   * The .map() call is inline here, but it can also be extracted into a
-   * variable before the return statement to keep the JSX leaner:
-   *   const items = exercises.map((exercise) => (
-   *     <ExerciseListItem key={exercise.id} exercise={exercise} />
-   *   ))
-   * Both approaches are valid — the variable form is worth reaching for
-   * when the mapping logic grows or when the JSX return becomes hard to read.
    */
   return (
     <ul className="flex flex-col gap-4">
       {exercises.map((exercise) => (
-        <ExerciseListItem key={exercise.id} exercise={exercise} />
+        <ExerciseListItem
+          key={exercise.id}
+          exercise={exercise}
+          isSelected={selectedId === exercise.id}
+          onSelect={setSelectedId}
+        />
       ))}
     </ul>
   )
