@@ -31,7 +31,7 @@ the start.
 - [What to notice in the code](#-what-to-notice-in-the-code)
 - [Running this branch](#-running-this-branch)
 - [Challenges for students](#-challenges-for-students)
-- [Thought pieces for next time](#-thought-pieces-for-next-time)
+- [Thought pieces for the next branch](#-thought-pieces-for-the-next-branch)
 
 ---
 
