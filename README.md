@@ -1,24 +1,28 @@
 # Tractus Frontend
 
-> **main — project scaffold** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 01 — JSX and Components** | Tractus Frontend · Web Dev Bootcamp
 
-A React + TypeScript SPA that consumes the Tractus personal training API.
-This branch is the starting point — a clean Vite scaffold with no domain
-code yet. Every subsequent branch builds on this foundation one concept at
-a time.
+React applications are built from components — functions that return markup.
+This phase introduces JSX, the syntax that makes that possible, and the
+concept of a component as the fundamental unit of a React UI.
 
-This project is the reference implementation for the frontend module of a
-web development bootcamp. The teacher and Claude build it together between
-lessons. Students read it between classes and complete their own assignments
-separately.
+We build one thing: a static `ExerciseCard` that renders hardcoded exercise
+data. No props, no state, no data fetching. The goal is to get the anatomy
+of a component completely clear before anything else is layered on top.
 
 ---
 
 ## 🗺️ Contents
 
 - [Branch sequence](#-branch-sequence)
-- [What this project builds](#-what-this-project-builds)
-- [What's in the scaffold](#-whats-in-the-scaffold)
+- [Resolving the thought pieces](#-resolving-the-thought-pieces)
+- [Why JSX](#-why-jsx)
+- [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
+- [What we're doing in this branch](#-what-were-doing-in-this-branch)
+- [The abstraction we earned](#-the-abstraction-we-earned)
+- [Learning goals](#-learning-goals)
+- [Key concepts](#-key-concepts)
+- [What to notice in the code](#-what-to-notice-in-the-code)
 - [Running this branch](#-running-this-branch)
 - [Challenges for students](#-challenges-for-students)
 - [Thought pieces for next time](#-thought-pieces-for-next-time)
@@ -29,8 +33,8 @@ separately.
 
 | Branch | What it introduces | Abstraction level |
 |---|---|---|
-| `📌 main` | **Vite + React scaffold, no domain** | Scaffold only |
-| `phase-01_react_jsx-and-components` | JSX, first component, static render | Static markup |
+| `main` | Vite + React scaffold, no domain | Scaffold only |
+| `📌 phase-01_react_jsx-and-components` | **JSX, first component, static render** | Static markup |
 | `phase-02_react_props-and-lists` | Props, component tree, rendering lists, keys | Hardcoded data |
 | `phase-03_react_state-and-events` | `useState`, event handlers, local interactivity | Hardcoded data |
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
@@ -43,52 +47,133 @@ separately.
 | `phase-11_sessions_entries-and-done` | Add entries, mark done, progress indicator | Auth + API |
 | `phase-12_state_redux` | Redux, global auth state, session state | Redux |
 
-> Phases 01–07 use only the public exercise API — no login required.
-> The auth wall arrives in phase 08, once React fundamentals are solid.
+---
+
+## ✅ Resolving the thought pieces
+
+### JSX has to be transformed before the browser sees it
+
+JSX is not valid JavaScript. A browser cannot parse `<ExerciseCard />` — it
+only understands standard JS. Vite runs a compiler (via `@vitejs/plugin-react`)
+that transforms JSX into `React.createElement(...)` calls before the code is
+served or bundled. The JSX you write is a convenient authoring format;
+what runs in the browser is plain function calls.
+
+### Splitting into components solves the single-file problem
+
+Right now the entire app is `App.tsx`. As the UI grows, one file becomes
+unmanageable — hard to read, hard to test, impossible to reuse. A component
+is a function with a clear responsibility: render one piece of the UI given
+the data it needs. Splitting into components creates boundaries. Each piece
+can be understood in isolation.
+
+### The exercise data lives in the API
+
+The Tractus backend exposes a `GET /exercises` endpoint. Right now that data
+is not in any of our files — it lives in a database the API sits in front of.
+Getting it into a component is a two-step problem: fetch it over HTTP, then
+pass it to the component that renders it. Both of those steps come in later
+phases. For now we hardcode the data directly in the component so the
+component itself is the only new concept.
 
 ---
 
-## 🏋️ What this project builds
+## 💡 Why JSX
 
-The core workflow:
+Writing UIs as function calls is correct but unreadable:
 
-> Browse exercises → create a session → add exercise entries → mark entries done → view history
+```js
+React.createElement('div', { className: 'card' },
+  React.createElement('h2', null, 'Back Squat'),
+  React.createElement('p', null, 'Legs')
+)
+```
 
-The exercise library is public. Sessions and entries require a login.
-Everything is backed by the Tractus REST API — see [`docs/PRD.md`](docs/PRD.md)
-for the full feature scope and user stories.
+JSX is syntactic sugar over exactly this. The component you write:
+
+```jsx
+function ExerciseCard() {
+  return (
+    <div className="card">
+      <h2>Back Squat</h2>
+      <p>Legs</p>
+    </div>
+  )
+}
+```
+
+compiles to the `createElement` calls above. JSX exists to make the structure
+of the UI visible at a glance. It is not HTML — it is a notation for
+describing a tree of React elements.
 
 ---
 
-## 🔍 What's in the scaffold
+## ⏮️ What we built in the previous branch
 
-**[`index.html`](index.html)**
-The single HTML file the browser loads. There is one `<div id="root">` — this
-is the mount point React takes over. Everything rendered by the app lives
-inside this element. The browser never navigates to a new HTML file after
-this point — that is what makes it a Single Page Application.
+The `main` branch is a Vite + React + TypeScript scaffold. It renders the
+default Vite welcome screen from a single `App.tsx` file. No domain code,
+no Tractus data, no structure — just a working build pipeline and a mount
+point in `index.html`.
 
-**[`src/main.tsx`](src/main.tsx)**
-The entry point. `createRoot` hands React control of the `#root` div and
-calls `render` with the top-level `<App />` component. `StrictMode` wraps
-the whole tree — it runs component lifecycle methods twice in development
-to surface bugs caused by side effects. It has no effect in production.
+---
+
+## 🎯 What we're doing in this branch
+
+- Strip the Vite default content from `App.tsx` and `App.css`
+- Write a static `ExerciseCard` component with hardcoded exercise data
+- Render `ExerciseCard` from `App`
+
+---
+
+## 🏆 The abstraction we earned
+
+> A component is a function that returns JSX. That is the whole model.
+> Everything React does — state, effects, context, routing — is built on top
+> of this one idea. Getting it completely clear now means every later concept
+> has a solid foundation to attach to.
+
+---
+
+## 🧑🏻‍🏫 Learning goals
+
+### Understand
+- **Explain** what JSX is and why it needs to be compiled before reaching the browser.
+- **Describe** the relationship between a React component and the DOM element(s) it produces.
+
+### Apply
+- **Write** a React function component that returns valid JSX.
+- **Render** a component from another component.
+
+### Analyze
+- **Identify** the differences between JSX and HTML (className vs class, self-closing tags, expressions in `{}`).
+- **Trace** the path from a JSX expression to the DOM node it produces.
+
+---
+
+## 🔑 Key concepts
+
+| Concept | Plain English |
+|---|---|
+| **JSX** | A syntax extension that lets you write HTML-like markup inside JavaScript. It is compiled to `React.createElement` calls before the browser sees it. |
+| **Component** | A function whose name starts with a capital letter and returns JSX. React calls this function to know what to render. |
+| **`className`** | The JSX equivalent of HTML's `class` attribute. JSX uses camelCase because `class` is a reserved word in JavaScript. |
+| **Expression in `{}`** | Any JavaScript expression inside curly braces is evaluated and its result is rendered. `{2 + 2}` renders `4`. |
+| **Single root element** | A component must return a single root element. Use a `<div>` or a Fragment (`<>...</>`) to wrap multiple siblings. |
+
+---
+
+## 🔍 What to notice in the code
+
+**[`src/components/ExerciseCard.tsx`](src/components/ExerciseCard.tsx)**
+The component is a plain function — no class, no lifecycle methods, nothing
+special. It returns JSX describing one exercise. The data is hardcoded inside
+the function body. In phase 02 this hardcoded data will be replaced by props
+passed in from the parent — but the component itself will barely change.
 
 **[`src/App.tsx`](src/App.tsx)**
-The default Vite welcome screen. This file will be replaced in phase 01.
-For now it is the only component — the entire app is one file.
-
-**[`src/index.css`](src/index.css)** and **[`src/App.css`](src/App.css)**
-Global and component-scoped styles from the Vite template. These will be
-replaced or stripped down as the project takes shape.
-
-**[`vite.config.ts`](vite.config.ts)**
-Vite's build and dev server configuration. The `@vitejs/plugin-react` plugin
-enables JSX transformation and React Fast Refresh during development.
-
-**[`tsconfig.app.json`](tsconfig.app.json)**
-TypeScript configuration for the application source. `strict: true` is on —
-type errors are errors, not warnings. This will matter from phase 01 onward.
+`App` renders `<ExerciseCard />` the same way it would render any HTML element.
+The capital letter is how React knows to call the function rather than look for
+a built-in HTML tag named `exercisecard`.
 
 ---
 
@@ -99,46 +184,47 @@ npm install
 npm run dev
 ```
 
-App runs at `http://localhost:5173`. No backend required on this branch —
-there is no API call yet.
+App runs at `http://localhost:5173`. No backend required — all data is hardcoded.
 
 ---
 
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-Open `index.html`. There is almost nothing in it — one `<div id="root">` and
-a script tag. Open the browser DevTools and inspect the DOM after the page
-loads. What is now inside `#root`? Where did it come from? Trace the path
-from `index.html` → `main.tsx` → `App.tsx` and describe what each file
-contributes.
+Open DevTools and inspect the rendered HTML. Find the `ExerciseCard` component
+in the DOM. Is there a `<ExerciseCard>` element? What does the browser actually
+see? What does this tell you about what React components are?
 
 **Challenge 2 — Analytical**
-`StrictMode` causes React to call certain functions twice in development.
-Add a `console.log('rendered')` to `App.tsx` and run the dev server. How
-many times does it log on the first render? Why? What is React trying to
-catch by doing this?
+JSX looks like HTML but it is not. Find three ways JSX differs from HTML in
+this codebase. For each one, explain why the difference exists.
 
-**Challenge 3 — Analytical**
-This is called a Single Page Application. Open the Network tab in DevTools
-and observe the requests as the page loads. How many HTML documents does the
-browser request? What does that tell you about how navigation will work once
-React Router is introduced in phase 05?
+**Challenge 3 — Additive**
+Create a second component: `ExerciseDetail`. It should display all the fields
+an exercise has — name, category, movement pattern, primary muscle, laterality,
+and SI risk. Hardcode a different exercise than `ExerciseCard` uses. Render
+both components side by side in `App`.
+
+**Challenge 4 — Analytical**
+A component must return a single root element. What happens if you try to
+return two sibling elements without a wrapper? Fix it using a Fragment
+(`<>...</>`) instead of a `<div>` and observe the difference in the rendered
+DOM.
 
 ---
 
 ## 💭 Thought pieces for next time
 
-1. The `App.tsx` file contains JSX — HTML-like syntax inside a TypeScript
-   file. The browser cannot run this directly. What has to happen to it
-   before it reaches the browser, and who does that work?
-2. React renders a *component tree*. Right now there is only one component:
-   `App`. What would it mean to split the UI into smaller components, and
-   what problem would that solve?
-3. The data we want to display — exercises from the Tractus API — is not in
-   any of these files. Where does it live right now, and how will it get
-   into the component?
+1. `ExerciseCard` has one exercise hardcoded inside it. If we want to render
+   ten different exercises, what would we have to do? Is there a better way?
+2. The list of exercises in the UI should match the list in the API. Right now
+   there is no connection between the two. What would that connection look like
+   in code?
+3. Some UI elements appear in every view — a header, a nav bar, a footer. Where
+   would those live in a component tree, and how would they relate to components
+   like `ExerciseCard`?
 
 ---
 
-*Next branch: [`phase-01_react_jsx-and-components`]*
+*Previous branch: [`main`]*
+*Next branch: [`phase-02_react_props-and-lists`]*
