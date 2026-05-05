@@ -1,11 +1,11 @@
 import './App.css'
-import ExerciseCard from './components/ExerciseCard'
+import ExerciseListItem from './components/ExerciseListItem'
 
 function App() {
   return (
     <main>
       <h1>Tractus</h1>
-      <ExerciseCard />
+      <ExerciseListItem />
     </main>
   )
 }

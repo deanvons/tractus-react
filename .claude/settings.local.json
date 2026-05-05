@@ -6,7 +6,11 @@
       "Bash(Move-Item _tmp\\\\.gitignore . -Force)",
       "Bash(Remove-Item _tmp -Recurse -Force)",
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git mv *)"
     ]
   }
 }
