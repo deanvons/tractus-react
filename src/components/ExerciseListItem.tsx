@@ -1,16 +1,22 @@
-// This component has its data hardcoded inside the function body.
-// In phase 02, that data will be passed in as props from the parent —
-// but the JSX structure you see here stays exactly the same.
-function ExerciseListItem() {
+import type { Exercise } from '../types/exercise'
+
+interface Props {
+  exercise: Exercise
+}
+
+// The data is now passed in from the parent — compare this to the phase-01
+// version where it was hardcoded inside the function body. The JSX structure
+// is identical; only the values changed from literals to prop expressions.
+function ExerciseListItem({ exercise }: Props) {
   return (
-    <div className="exercise-list-item">
-      <h2>Back Squat</h2>
+    <div>
+      <h2>{exercise.name}</h2>
       <ul>
-        <li><strong>Category:</strong> Strength</li>
-        <li><strong>Movement pattern:</strong> Squat</li>
-        <li><strong>Primary muscle:</strong> Quadriceps</li>
-        <li><strong>Laterality:</strong> Bilateral</li>
-        <li><strong>SI risk:</strong> Medium</li>
+        <li><strong>Category:</strong> {exercise.category}</li>
+        <li><strong>Movement pattern:</strong> {exercise.movementPattern}</li>
+        <li><strong>Primary muscle:</strong> {exercise.primaryMuscle}</li>
+        <li><strong>Laterality:</strong> {exercise.laterality}</li>
+        <li><strong>SI risk:</strong> {exercise.siRisk}</li>
       </ul>
     </div>
   )
