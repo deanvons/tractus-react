@@ -44,8 +44,8 @@ const exercises: Exercise[] = [
 
 function App() {
   return (
-    <main>
-      <h1>Tractus</h1>
+    <main className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Tractus</h1>
       <ExerciseList exercises={exercises} />
     </main>
   )

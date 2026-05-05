@@ -7,7 +7,7 @@ interface Props {
 
 function ExerciseList({ exercises }: Props) {
   return (
-    <ul>
+    <ul className="flex flex-col gap-4">
       {exercises.map((exercise) => (
         <ExerciseListItem key={exercise.id} exercise={exercise} />
       ))}
