@@ -1,20 +1,26 @@
 # Tractus Frontend
 
-> **Phase 02 — Props and Lists** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 03 — State and Events** | Tractus Frontend · Web Dev Bootcamp
 
-Phase 01 gave us a component — a function that returns JSX. But the component
-had its data baked in. One component, one hardcoded exercise, nothing reusable.
-This phase makes components useful: they receive data from outside via props,
-and we use that to render a list of exercises from a hardcoded array.
+`useState` and event handlers give components memory and the ability to respond
+to user interaction.
 
-We also introduce Tailwind CSS here — before the component tree grows any
-further — so that every component we write from this point on is styled from
-the start.
+Phase 02 gave us a reusable component that renders any exercise passed to it.
+But the list was static — it rendered once and stayed the same regardless of
+what the user did. Components without state are display-only; they cannot
+respond to interaction, remember a choice, or show anything different based on
+what has happened. This phase adds the missing capability: a component can now
+hold a value, respond to a user action, and update what it shows.
 
-> **A note on scope.** The exercise data is still hardcoded in the component
-> tree. Fetching it from the API comes in phase 04 once effects and lifecycle
-> are introduced. For now, the focus is on the data flow between components —
-> not where the data comes from.
+The interaction is deliberately small — click an exercise to select it, click
+again to deselect. One piece of state, one event handler, one visual response.
+That is enough to introduce the full cycle: state is declared, an event
+triggers an update, React re-renders, the UI reflects the new state.
+
+> **A note on scope.** State here is local — it lives in one component and is
+> not shared across the app. Global state management comes in phase 12. The
+> focus for now is understanding what state does and where it should live before
+> introducing anything that abstracts it.
 
 ---
 
@@ -22,7 +28,7 @@ the start.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why Tailwind](#-why-tailwind)
+- [Why state lives in the parent](#-why-state-lives-in-the-parent)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
@@ -41,8 +47,8 @@ the start.
 |---|---|---|
 | `main` | Vite + React scaffold, no domain | Scaffold only |
 | `phase-01_react_jsx-and-components` | JSX, first component, static render | Static markup |
-| `📌 phase-02_react_props-and-lists` | **Props, component tree, rendering lists, keys** | Hardcoded data |
-| `phase-03_react_state-and-events` | `useState`, event handlers, local interactivity | Hardcoded data |
+| `phase-02_react_props-and-lists` | Props, component tree, rendering lists, keys | Hardcoded data |
+| `📌 phase-03_react_state-and-events` | **`useState`, event handlers, local interactivity** | Hardcoded data |
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
 | `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
 | `phase-06_forms_controlled-inputs` | Controlled inputs, filter form, form submission | Live API data |
@@ -57,120 +63,104 @@ the start.
 
 ## ✅ Resolving the thought pieces
 
-### One component, different data — that is what props are for
+### The list is static — what would it take to make it interactive?
 
-In phase 01, `ExerciseListItem` had one exercise hardcoded inside it. Rendering
-ten different exercises would have meant ten separate component files, each
-a near-identical copy. Props solve this: the parent holds the data and passes
-it in, the component renders whatever it receives. One component definition,
-any number of instances, each with its own data.
+A component needs state. Without state, a component is a pure function of its
+props — given the same input it always produces the same output. `useState`
+gives it memory: a value that persists across re-renders and causes a new render
+when it changes. That is what the list was missing. We resolve it here — clicking
+an exercise sets a `selectedId` in state, and React re-renders the list to
+reflect the change.
 
-### Tailwind replaces the separate CSS files
+### What should the UI show while data is loading?
 
-The thought piece asked whether there was a better way to manage styles than
-maintaining separate CSS files per component. There is — and we resolve it
-here. Tailwind utility classes live directly in the JSX, alongside the markup
-they style. No separate file, no class name to invent, no import to manage.
+Deferred to phase 04. Loading and error states only become necessary when we
+introduce `useEffect` and a real fetch call. Seeding the question here is the
+right move — the answer lands where it belongs.
 
-### React Developer Tools now shows props
+### How should we organise the `components` folder?
 
-In phase 01, the component tree had no data flowing through it — DevTools
-was not much more than a tree view. Now that components receive props, select
-any `ExerciseListItem` in the Components panel and observe the props displayed
-on the right. This is the beginning of DevTools as a debugging tool: you can
-see exactly what data a component received and verify it matches what you
-expected.
+Still deferred. Two components do not warrant a folder strategy. When we add a
+form component in phase 06, the tension will be real enough to make the
+tradeoff concrete. Until then, flat is fine.
 
-### Layout components — deferred to phase 05
+### When does collapsing container and presentational into one component make sense?
 
-Where a shared header or navigation bar lives in the component tree is a
-routing concern — it only makes sense once there are multiple pages to navigate
-between. This is resolved in phase 05 when React Router is introduced.
-
-### Testing — carried forward
-
-Testing is deferred until there is enough app to make the tradeoffs concrete.
-It will be addressed once the component tree has props, state, and API calls
-in play.
+We keep them separate here, and the reason becomes clearer in this phase:
+`ExerciseList` now holds `selectedId` in state and passes both `isSelected`
+and `onSelect` down to each `ExerciseListItem`. If the selection logic lived
+inside each item, there would be no way to enforce "only one selected at a
+time" — each item would track its own state independently. State that affects
+multiple siblings belongs in their common parent.
 
 ---
 
-## 💡 Why Tailwind
+## 💡 Why state lives in the parent
 
-Styling with separate CSS files works but creates friction as the component
-tree grows: every component needs its own file, its own class names, and an
-import to wire them together. The styles live separately from the markup they
-describe, which means context-switching between two files to understand one
-component.
+The selected exercise ID could have lived inside `ExerciseListItem`. Each item
+would track whether it was selected. But then two items could be selected
+simultaneously — there is nothing to coordinate between them. To enforce a
+single selection, the state must live somewhere that can see all the items at
+once. That is the common parent: `ExerciseList`.
 
-Tailwind puts the styles where the markup is. A utility class like `text-sm`
-or `font-bold` is read directly in the JSX alongside the element it affects.
-The component is self-contained — one file describes both structure and
-appearance.
-
-The alternative we considered was Bootstrap. Bootstrap gives you pre-built
-components — buttons, cards, navbars — with an opinionated design system
-attached. That is limiting: you are building inside Bootstrap's constraints
-rather than composing your own design. Tailwind gives you utilities, not
-components, so the design decisions remain yours.
-
-The tradeoff worth naming: Tailwind utility classes are shorthand for CSS
-properties you should know. `flex`, `justify-center`, and `gap-4` map
-directly to `display: flex`, `justify-content: center`, and `gap: 1rem`.
-The shorthand is convenient, but if a class name is unfamiliar, look up
-the underlying property — that is what the browser is actually applying.
+This is the general rule: lift state to the lowest common ancestor of every
+component that needs it. Here that is `ExerciseList`. In a later phase, when
+selected exercises need to be visible outside the list entirely, the state will
+need to move again — higher up the tree, or into a shared store.
 
 ---
 
 ## ⏮️ What we built in the previous branch
 
-Phase 01 produced a single `ExerciseListItem` component with one hardcoded
-exercise and no styling. `App` rendered it directly. The build pipeline and
-component model were established; the data flow and visual design were not.
+Phase 02 produced a component tree: `App` renders `ExerciseList`, which renders
+a list of `ExerciseListItem` components via `.map()`. Each item receives an
+`exercise` prop and renders it. Tailwind handles all styling. The list was fully
+reusable but entirely static — no user interaction, no state.
 
 ---
 
 ## 🎯 What we're doing in this branch
 
-- Install Tailwind CSS and remove the remaining plain CSS files
-- Define an `Exercise` TypeScript type
-- Add props to `ExerciseListItem` so it renders any exercise passed to it
-- Create an `ExerciseList` component that renders a list of `ExerciseListItem` components
-- Render `ExerciseList` from `App` — `ExerciseList` owns its own data
-- Apply Tailwind classes throughout
+- Add `useState` to `ExerciseList` to track the ID of the selected exercise
+- Extend the `ExerciseListItem` Props interface with `isSelected` and `onSelect`
+- Pass `isSelected` and `onSelect` from `ExerciseList` to each `ExerciseListItem`
+- Add an `onClick` handler in `ExerciseListItem` that calls `onSelect`
+- Apply conditional Tailwind styling to highlight the selected item
 
 ---
 
 ## 🏆 The abstraction we earned
 
-> Props decouple the component from its data. `ExerciseListItem` no longer
-> knows or cares which exercise it is rendering — it renders whatever it
-> receives. That single change transforms it from a one-off static file into
-> a reusable piece. `ExerciseList` can now render ten exercises, a hundred,
-> or zero — the component does not change, only the array passed to it does.
+> `useState` turns a component from a pure display function into a participant
+> in the application. It can now hold a value, respond to what the user does,
+> and decide what to show based on its own history. The re-render cycle —
+> state changes, React re-renders, UI updates — is the engine underneath every
+> interactive React application. Every hook, every state library, every form
+> input you will encounter from here on is built on top of this cycle.
 
 ---
 
 ## 🧑🏻‍🏫 Learning goals
 
 ### Understand
-- **Explain** what props are and how they flow through the component tree.
-- **Describe** why React requires a `key` prop when rendering lists and what
-  problem it solves.
+- **Explain** what `useState` returns and what happens when the setter is called.
+- **Describe** why React re-renders a component when state changes and what
+  determines which components are affected.
 
 ### Apply
-- **Pass** data into a component via props and render it.
-- **Render** an array of items using `.map()` with a unique `key` on each element.
-- **Use** Tailwind utility classes to style components without a separate CSS file.
+- **Use** `useState` to track a single piece of local state in a component.
+- **Wire** an event handler to a user interaction and update state in response.
+- **Pass** a callback function as a prop and call it from a child component.
 
 ### Analyze
-- **Examine** the component tree in React Developer Tools and verify the props
-  each component received match the data passed by its parent.
-- **Identify** what would break if two items in a list shared the same `key`.
+- **Examine** why `selectedId` lives in `ExerciseList` rather than in
+  `ExerciseListItem` — trace what would break if it were moved.
+- **Trace** the full re-render cycle: user clicks → handler fires → state updates
+  → component re-renders → UI reflects new state.
 
 ### Evaluate
-- **Assess** the tradeoff between Tailwind and Bootstrap — in what kind of
-  project might Bootstrap be the better choice?
+- **Assess** the tradeoff between keeping state local and lifting it to a parent —
+  what do you gain and what do you give up in each case?
 
 ---
 
@@ -178,67 +168,60 @@ component model were established; the data flow and visual design were not.
 
 | Concept | Plain English |
 |---|---|
-| **Props** | Data passed from a parent component to a child. The child receives them as a function argument and renders them. Props flow down — a child never passes data up to its parent through props. |
-| **`key`** | A unique identifier React requires on each item when rendering a list. It lets React track which item is which across re-renders without re-rendering the whole list. |
-| **`.map()`** | A JavaScript array method that transforms each item in an array into something else — in React, typically a JSX element. It returns a new array; it does not change the original. |
-| **Type / Interface** | A TypeScript definition that describes the shape of an object. Lets the compiler catch a wrong or missing prop before the code runs. |
-| **Tailwind utility class** | A single-purpose CSS class that applies one style rule. Composed directly in JSX rather than defined in a separate stylesheet. |
-| **Container component** | A component that owns data or logic and passes it down to children. `ExerciseList` is a container — it knows about the exercise array and decides what to render. |
-| **Presentational component** | A component that only renders what it receives via props. `ExerciseListItem` is presentational — it has no opinion about where its data comes from. |
+| **`useState`** | A React hook that adds a piece of state to a component. Returns the current value and a setter function. Calling the setter triggers a re-render. |
+| **Re-render** | React re-running the component function and updating the DOM to match the new output. Happens automatically when state or props change. |
+| **Event handler** | A function attached to a user interaction — a click, a keystroke, a form submission. In React, event handlers are passed as props (`onClick`, `onChange`, etc.). |
+| **Callback prop** | A function passed from a parent to a child as a prop. The child calls it to tell the parent something happened — the only way data moves up the tree. |
+| **Conditional rendering** | Deciding what to render based on a value — a prop, a piece of state, or a derived expression. In JSX this is usually a ternary or a template string. |
+| **Lifting state** | Moving state up to a common ancestor so that multiple children can read or influence it. The rule: state lives at the lowest level that can see everyone who needs it. |
 
 ---
 
 ## 🔍 What to notice in the code
 
-**[`src/types/exercise.ts`](src/types/exercise.ts)**
-The `Exercise` type defines the shape of the data flowing through the
-component tree. Every prop typed as `Exercise` is checked against this
-definition at compile time — a missing field or a typo in a property name
-is a build error, not a runtime surprise.
+**[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
+This is where `useState` appears for the first time. Notice that `selectedId`
+is `string | null` — null means nothing is selected, a string means one exercise
+is. The setter is passed down as `onSelect`; `ExerciseList` does not handle the
+click itself, it delegates that to the child and reacts to the result.
 
 **[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx)**
-Compare this file to the phase-01 version. The JSX structure is almost
-identical — the only change is that the hardcoded values are replaced by
-expressions in `{}` reading from the `exercise` prop. This is the pattern:
-the component's shape is fixed, its data is variable.
-
-**[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
-The `.map()` call is the entire rendering logic. Each `ExerciseListItem`
-gets a `key` and an `exercise` prop. Notice that `ExerciseList` does not
-know what an exercise looks like — it only knows it has an array of them and
-a component that can render one.
-
-**[`src/App.tsx`](src/App.tsx)**
-`App` is responsible for layout only — it renders `<ExerciseList />` with no
-props and no knowledge of exercise data. Notice how little it does. That
-simplicity is intentional: feature components own their data, `App` owns the
-page structure.
+Two new props: `isSelected` (boolean) and `onSelect` (function). The component
+does not know what selecting means — it just calls `onSelect` when clicked and
+applies a different style when `isSelected` is true. This is the presentational
+component pattern holding: the child renders what it receives and reports what
+happened; the parent decides what to do with it.
 
 **Component tree**
 
 ```mermaid
 graph TD
   App["App\n(layout only)"]
-  ExList["ExerciseList\n(container — owns data)"]
-  ELI1["ExerciseListItem"]
-  ELI2["ExerciseListItem"]
-  ELI3["ExerciseListItem"]
+  ExList["ExerciseList\n(container — owns state + data)"]
+  ELI1["ExerciseListItem\nisSelected / onSelect"]
+  ELI2["ExerciseListItem\nisSelected / onSelect"]
+  ELI3["ExerciseListItem\nisSelected / onSelect"]
   ELIn["…"]
 
   App --> ExList
-  ExList -->|"exercise={…}"| ELI1
-  ExList -->|"exercise={…}"| ELI2
-  ExList -->|"exercise={…}"| ELI3
+  ExList -->|"exercise / isSelected / onSelect"| ELI1
+  ExList --> ELI2
+  ExList --> ELI3
   ExList --> ELIn
+  ELI1 -.->|"onSelect(id)"| ExList
+  ELI2 -.-> ExList
+  ELI3 -.-> ExList
 ```
 
-`App` knows nothing about exercises. `ExerciseList` knows about the array but
-not what an individual exercise looks like. `ExerciseListItem` knows what an
-exercise looks like but not where it came from. Each component has one
-responsibility and one layer of knowledge.
+Solid arrows are props flowing down. Dashed arrows are the callback firing up.
+This is the complete picture of data flow in a React component tree — props
+down, callbacks up, state at the common ancestor.
 
-The arrows carry the prop — data flows down. Nothing flows up. That is the
-core rule of this phase.
+Note: component diagrams conventionally show structure only — the boxes and
+their relationships. The prop and callback labels on the arrows are here
+because this is a learning context and making the data flow explicit is the
+point. You would not normally annotate a diagram this way in production
+documentation.
 
 ---
 
@@ -256,53 +239,52 @@ App runs at `http://localhost:5173`. No backend required — all data is hardcod
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-Open React Developer Tools and select an `ExerciseListItem` in the component
-tree. What props does it show? Now change one of the hardcoded exercise values
-in `App.tsx` and save — what updates in the UI and in DevTools? What does this
-tell you about when React re-renders a component?
+Open React Developer Tools and select `ExerciseList` in the component tree.
+Find where its state is displayed. Click an exercise in the UI — what changes
+in the DevTools panel? Now click the same exercise again — what happens? Trace
+what is happening in the code each time.
 
 **Challenge 2 — Analytical**
-Remove the `key` prop from the `.map()` in `ExerciseList`. What warning appears
-in the console? Read the warning carefully — what is React telling you, and why
-does it need the key to manage a list efficiently?
+`selectedId` is `string | null`. Why `null` rather than an empty string `""`
+to represent "nothing selected"? What is the practical difference, and which
+is clearer when you read the conditional in `ExerciseListItem`?
 
-**Challenge 3 — Additive**
-Add a `siRisk` badge to `ExerciseListItem` that changes colour depending on
-the value — green for `low`, yellow for `medium`, red for `high`. Use Tailwind
-conditional classes. How do you decide which class to apply based on a prop value?
+**Challenge 3 — Analytical**
+The `onSelect` prop is a function. What type does TypeScript infer for it?
+Open the Props interface in `ExerciseListItem` and read how it is typed. What
+does `(id: string) => void` mean, and what would break if you removed the type
+annotation?
 
-**Challenge 4 — Analytical**
-The exercise data lives in `ExerciseList` rather than in `App`. Why? What
-would have to change if two different parts of the UI needed the same exercise
-data — a list view and a detail view, for example? Would `ExerciseList` still
-be the right place to hold it?
+**Challenge 4 — Additive**
+Add a deselect behaviour: if the user clicks the already-selected exercise,
+clear the selection. What is the minimal change inside the `onSelect` handler
+to support this? What condition do you check?
 
 **Challenge 5 — Additive (stretch)**
-Add a second prop to `ExerciseListItem`: `isSelected` (boolean). When true,
-render the item with a highlighted border. Render one item as selected in
-`ExerciseList`. What will it take to make the selection interactive in a
-later phase?
+Add a small info panel below the list that shows the name and category of the
+selected exercise, or a placeholder when nothing is selected. The panel should
+live in `ExerciseList` — not in `ExerciseListItem`. What state do you need to
+pass to it, and what does this reveal about where state needs to live as more
+of the UI depends on it?
 
 ---
 
 ## 💭 Thought pieces for the next branch
 
-1. The exercise list is static — it renders once and never changes. What if
-   we wanted to let the user select an exercise, or toggle between a list view
-   and a detail view? What would the component need that it does not have now?
-2. The hardcoded array in `ExerciseList` is a stand-in for real API data. When we
-   replace it with a fetch call, something has to happen between "the component
-   mounts" and "the data arrives". What should the UI show during that gap?
-3. Two components now share a relationship: `ExerciseList` knows about
-   `ExerciseListItem`. As more components are added, how should we organise
-   the `components` folder — and does it matter yet?
-4. `ExerciseList` is a container — it owns the data and decides what to render.
-   `ExerciseListItem` is presentational — it renders whatever it receives. This
-   separation is deliberate, but it is not a rule. When does collapsing the two
-   into a single component make more sense than keeping them separate? What
-   would you lose if you did?
+1. State is local — it lives in the component and disappears when the component
+   unmounts. What happens to the selected exercise if the user navigates away
+   and comes back? Is losing that selection on navigation acceptable? What would
+   you need to preserve it?
+2. `ExerciseList` still holds hardcoded exercise data. When we replace it with a
+   real fetch call, the component will pass through at least three distinct
+   states: before the request fires, while it is in flight, and after it
+   settles (success or error). How should the UI handle each of those states?
+3. The `onSelect` callback is one level deep — `ExerciseList` passes it to
+   `ExerciseListItem`. What if a deeply nested child needed to trigger the same
+   action? Would you thread the callback through every level in between? What
+   is the cost of that, and what might be a better approach?
 
 ---
 
-*Previous branch: [`phase-01_react_jsx-and-components`]*
-*Next branch: [`phase-03_react_state-and-events`]*
+*Previous branch: [`phase-02_react_props-and-lists`]*
+*Next branch: [`phase-04_react_effects-and-fetch`]*
