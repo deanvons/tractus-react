@@ -1,72 +1,65 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Exercise } from '../types/exercise'
 import ExerciseListItem from './ExerciseListItem'
 
-/*
- * The hardcoded data lives here rather than in App — ExerciseList is the
- * feature component responsible for exercises, so it owns its data.
- * In phase 04 this array is replaced by a fetch call to GET /exercises.
- * ExerciseListItem will not need to change at all.
- */
-const exercises: Exercise[] = [
-  {
-    id: '1',
-    name: 'Back Squat',
-    category: 'Strength',
-    movementPattern: 'Squat',
-    primaryMuscle: 'Quadriceps',
-    laterality: 'bilateral',
-    siRisk: 'medium',
-  },
-  {
-    id: '2',
-    name: 'Romanian Deadlift',
-    category: 'Strength',
-    movementPattern: 'Hinge',
-    primaryMuscle: 'Hamstrings',
-    laterality: 'bilateral',
-    siRisk: 'medium',
-  },
-  {
-    id: '3',
-    name: 'Pull-up',
-    category: 'Strength',
-    movementPattern: 'Pull',
-    primaryMuscle: 'Latissimus Dorsi',
-    laterality: 'bilateral',
-    siRisk: 'low',
-  },
-  {
-    id: '4',
-    name: 'Single-leg Romanian Deadlift',
-    category: 'Strength',
-    movementPattern: 'Hinge',
-    primaryMuscle: 'Hamstrings',
-    laterality: 'unilateral',
-    siRisk: 'high',
-  },
-]
-
 function ExerciseList() {
+  const [exercises, setExercises] = useState<Exercise[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   /*
    * selectedId is null when nothing is selected and holds the exercise id
    * when one is active. It lives here — not in ExerciseListItem — because
    * only one item can be selected at a time, and enforcing that requires a
    * single piece of state that can see all items at once.
-   *
-   * Calling setSelectedId triggers a re-render. React re-runs this function,
-   * computes isSelected fresh for each item, and updates only the items whose
-   * output changed. The rest are left untouched.
    */
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   /*
-   * Each ExerciseListItem receives one exercise as a prop via .map().
-   * The key prop is required on every item in a list — React uses it to
-   * track which item is which across re-renders. Without it, React has to
-   * re-render the entire list on every change instead of only what changed.
-   * We use the exercise id because it is stable and unique.
+   * useEffect runs after the component renders. The empty array [] is the
+   * dependency array — it tells React to run this effect once, after the
+   * first render (mount), and never again. Without it, the effect would run
+   * after every render, causing an infinite loop of fetches and re-renders.
+   *
+   * fetch() is a browser API — it lives outside React. useEffect is the
+   * designated place for code that reaches outside the component like this.
+   * Calling fetch directly in the component body would run on every render
+   * and cannot be controlled the same way.
+   *
+   * In phase 07 this fetch call moves into a service module — the component
+   * will not know or care how the data is fetched, only that it arrives.
    */
+  useEffect(() => {
+    fetch('http://localhost:8080/api/exercises')
+      .then((response) => {
+        if (!response.ok) {
+          /*
+           * response.ok is false for 4xx and 5xx status codes. fetch() does
+           * not throw on these — it only rejects on network failure. Checking
+           * response.ok catches server errors that a try/catch alone would miss.
+           */
+          throw new Error(`Server error: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then((data: Exercise[]) => {
+        setExercises(data)
+        setIsLoading(false)
+      })
+      .catch((err: Error) => {
+        setError(err.message)
+        setIsLoading(false)
+      })
+  }, [])
+
+  if (isLoading) {
+    return <p className="text-gray-500">Loading exercises...</p>
+  }
+
+  if (error) {
+    return <p className="text-red-500">Failed to load exercises: {error}</p>
+  }
+
   return (
     <ul className="flex flex-col gap-4">
       {exercises.map((exercise) => (
