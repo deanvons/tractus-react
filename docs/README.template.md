@@ -55,9 +55,12 @@ thought piece is deferred, say so explicitly and say which phase picks it up.]
 
 ## 💡 Why we made this decision
 
-[The key architectural or design choice this phase makes. One to two sections
-max. Each section names the decision and explains why — not just what was
-chosen but what the alternatives were and why they were rejected or deferred.]
+[A decision we made — a choice between alternatives. Omit this section if
+there was no real decision, or if the "why" is already covered by the thought
+piece resolutions. Do not use this section to explain framework fundamentals
+(e.g. "Why JSX" — JSX is not a choice, it is React). One to two sections max.
+Each section names the decision and explains why — not just what was chosen
+but what the alternatives were and why they were rejected or deferred.]
 
 [If this phase introduces a library or abstraction, this section must answer:
 what would we have to write if this did not exist? Use the framing:
