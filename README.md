@@ -208,6 +208,10 @@ DOM.
 3. Some UI elements appear in every view — a header, a nav bar, a footer. Where
    would those live in a component tree, and how would they relate to components
    like `ExerciseCard`?
+4. `ExerciseCard` has no styles yet. As the component tree grows, each component
+   will need its own CSS. That means more files, more imports, more names to
+   invent. Is there a different way to manage styles that keeps everything closer
+   to the component?
 
 ---
 
