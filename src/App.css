@@ -1,3 +1,4 @@
+/* Global layout styles will move to Tailwind utility classes in phase 02. */
 main {
   max-width: 800px;
   margin: 0 auto;

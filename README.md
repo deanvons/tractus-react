@@ -211,7 +211,9 @@ DOM.
 4. `ExerciseCard` has no styles yet. As the component tree grows, each component
    will need its own CSS. That means more files, more imports, more names to
    invent. Is there a different way to manage styles that keeps everything closer
-   to the component?
+   to the component? Consider two options: a utility-first framework like Tailwind
+   that puts styles directly in the JSX, or a component framework like Bootstrap
+   that gives you pre-built components. What is the tradeoff between the two?
 
 ---
 
