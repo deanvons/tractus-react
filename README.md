@@ -24,7 +24,7 @@ of a component completely clear before anything else is layered on top.
 - [What to notice in the code](#-what-to-notice-in-the-code)
 - [Running this branch](#-running-this-branch)
 - [Challenges for students](#-challenges-for-students)
-- [Thought pieces for next time](#-thought-pieces-for-next-time)
+- [Thought pieces for the next branch](#-thought-pieces-for-the-next-branch)
 
 ---
 
@@ -186,7 +186,7 @@ DOM.
 
 ---
 
-## 💭 Thought pieces for next time
+## 💭 Thought pieces for the next branch
 
 1. `ExerciseListItem` has one exercise hardcoded inside it. If we want to render
    ten different exercises — each with different data — what would we have to
