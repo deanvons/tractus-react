@@ -128,6 +128,7 @@ point in `index.html`.
 ### Apply
 - **Write** a React function component that returns valid JSX.
 - **Render** a component from another component.
+- **Use** React Developer Tools to inspect the component tree and compare it to the browser DOM.
 
 ### Analyze
 - **Identify** the differences between JSX and HTML (className vs class, self-closing tags, expressions in `{}`).
@@ -204,11 +205,10 @@ DOM.
 ## 💭 Thought pieces for next time
 
 1. `ExerciseListItem` has one exercise hardcoded inside it. If we want to render
-   ten different exercises, what would we have to do? Is there a better way?
-2. The list of exercises in the UI should match the list in the API. Right now
-   there is no connection between the two. What would that connection look like
-   in code?
-3. Some UI elements appear in every view — a header, a nav bar, a footer. Where
+   ten different exercises — each with different data — what would we have to
+   change? What would a better design look like, and what would the component
+   need to receive from outside itself?
+2. Some UI elements appear in every view — a header, a nav bar, a footer. Where
    would those live in a component tree, and how would they relate to components
    like `ExerciseListItem`?
 4. `ExerciseListItem` has no styles yet. As the component tree grows, each component
@@ -217,10 +217,9 @@ DOM.
    to the component? Consider two options: a utility-first framework like Tailwind
    that puts styles directly in the JSX, or a component framework like Bootstrap
    that gives you pre-built components. What is the tradeoff between the two?
-5. React Developer Tools shows you the component tree — the React view of your app.
-   Right now there is only one component and no data flowing through it. What do
-   you think the DevTools will show once components receive props and hold state?
-   What would make it a useful debugging tool?
+5. Once components receive props and hold state, what do you think React Developer
+   Tools will show that it cannot show right now? What would make it a genuinely
+   useful debugging tool rather than just a tree view?
 6. We have a component — how would you test it? What would you even assert? And
    is there a way to write the test *before* the component — letting the test
    define what the component should do rather than the other way around?
