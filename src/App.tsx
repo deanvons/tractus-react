@@ -1,4 +1,3 @@
-import './App.css'
 import ExerciseListItem from './components/ExerciseListItem'
 
 function App() {
