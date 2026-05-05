@@ -51,6 +51,14 @@ function ExerciseList() {
     // track which item is which across re-renders. Without it, React has to
     // re-render the entire list on every change instead of only what changed.
     // We use the exercise id because it is stable and unique.
+    //
+    // The .map() call is inline here, but it can also be extracted into a
+    // variable before the return statement to keep the JSX leaner:
+    //   const items = exercises.map((exercise) => (
+    //     <ExerciseListItem key={exercise.id} exercise={exercise} />
+    //   ))
+    // Both approaches are valid — the variable form is worth reaching for
+    // when the mapping logic grows or when the JSX return becomes hard to read.
     <ul className="flex flex-col gap-4">
       {exercises.map((exercise) => (
         <ExerciseListItem key={exercise.id} exercise={exercise} />
