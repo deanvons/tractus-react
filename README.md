@@ -136,7 +136,7 @@ component model were established; the data flow and visual design were not.
 - Define an `Exercise` TypeScript type
 - Add props to `ExerciseListItem` so it renders any exercise passed to it
 - Create an `ExerciseList` component that renders a list of `ExerciseListItem` components
-- Render `ExerciseList` from `App` with a hardcoded array of exercises
+- Render `ExerciseList` from `App` — `ExerciseList` owns its own data
 - Apply Tailwind classes throughout
 
 ---
@@ -207,10 +207,10 @@ know what an exercise looks like — it only knows it has an array of them and
 a component that can render one.
 
 **[`src/App.tsx`](src/App.tsx)**
-`App` is the only place the hardcoded exercise data lives. It passes the
-array down to `ExerciseList`. In phase 04 this hardcoded array will be
-replaced by data fetched from the API — but `ExerciseList` and
-`ExerciseListItem` will not change.
+`App` is responsible for layout only — it renders `<ExerciseList />` with no
+props and no knowledge of exercise data. Notice how little it does. That
+simplicity is intentional: feature components own their data, `App` owns the
+page structure.
 
 ---
 
@@ -244,9 +244,10 @@ the value — green for `low`, yellow for `medium`, red for `high`. Use Tailwind
 conditional classes. How do you decide which class to apply based on a prop value?
 
 **Challenge 4 — Analytical**
-`App` currently holds the exercise data as a hardcoded array. As the app grows,
-is `App` the right place for this? What would happen if two different parts of
-the UI needed the same exercise data? Where else could it live?
+The exercise data lives in `ExerciseList` rather than in `App`. Why? What
+would have to change if two different parts of the UI needed the same exercise
+data — a list view and a detail view, for example? Would `ExerciseList` still
+be the right place to hold it?
 
 **Challenge 5 — Additive (stretch)**
 Add a second prop to `ExerciseListItem`: `isSelected` (boolean). When true,
@@ -261,7 +262,7 @@ later phase?
 1. The exercise list is static — it renders once and never changes. What if
    we wanted to let the user select an exercise, or toggle between a list view
    and a detail view? What would the component need that it does not have now?
-2. The hardcoded array in `App` is a stand-in for real API data. When we
+2. The hardcoded array in `ExerciseList` is a stand-in for real API data. When we
    replace it with a fetch call, something has to happen between "the component
    mounts" and "the data arrives". What should the UI show during that gap?
 3. Two components now share a relationship: `ExerciseList` knows about
