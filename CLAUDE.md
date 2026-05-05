@@ -8,8 +8,8 @@ guidelines needed to continue work without re-explaining anything.
 
 ## Product requirements
 
-See [PRD.md](PRD.md) for the full feature scope, user stories, and data model.
-Do not build features not listed in PRD.md.
+See [docs/PRD.md](docs/PRD.md) for the full feature scope, user stories, and data model.
+Do not build features not listed in docs/PRD.md.
 
 ---
 
