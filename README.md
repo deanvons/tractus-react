@@ -1,14 +1,20 @@
 # Tractus Frontend
 
-> **Phase 01 — JSX and Components** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 02 — Props and Lists** | Tractus Frontend · Web Dev Bootcamp
 
-React applications are built from components — functions that return markup.
-This phase introduces JSX, the syntax that makes that possible, and the
-concept of a component as the fundamental unit of a React UI.
+Phase 01 gave us a component — a function that returns JSX. But the component
+had its data baked in. One component, one hardcoded exercise, nothing reusable.
+This phase makes components useful: they receive data from outside via props,
+and we use that to render a list of exercises from a hardcoded array.
 
-We build one thing: a static `ExerciseListItem` that renders hardcoded exercise
-data. No props, no state, no data fetching. The goal is to get the anatomy
-of a component completely clear before anything else is layered on top.
+We also introduce Tailwind CSS here — before the component tree grows any
+further — so that every component we write from this point on is styled from
+the start.
+
+> **A note on scope.** The exercise data is still hardcoded in the component
+> tree. Fetching it from the API comes in phase 04 once effects and lifecycle
+> are introduced. For now, the focus is on the data flow between components —
+> not where the data comes from.
 
 ---
 
@@ -16,7 +22,7 @@ of a component completely clear before anything else is layered on top.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why JSX](#-why-jsx)
+- [Why Tailwind](#-why-tailwind)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
@@ -34,8 +40,8 @@ of a component completely clear before anything else is layered on top.
 | Branch | What it introduces | Abstraction level |
 |---|---|---|
 | `main` | Vite + React scaffold, no domain | Scaffold only |
-| `📌 phase-01_react_jsx-and-components` | **JSX, first component, static render** | Static markup |
-| `phase-02_react_props-and-lists` | Props, component tree, rendering lists, keys | Hardcoded data |
+| `phase-01_react_jsx-and-components` | JSX, first component, static render | Static markup |
+| `📌 phase-02_react_props-and-lists` | **Props, component tree, rendering lists, keys** | Hardcoded data |
 | `phase-03_react_state-and-events` | `useState`, event handlers, local interactivity | Hardcoded data |
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
 | `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
@@ -51,88 +57,120 @@ of a component completely clear before anything else is layered on top.
 
 ## ✅ Resolving the thought pieces
 
-### JSX has to be transformed before the browser sees it
+### One component, different data — that is what props are for
 
-JSX is not valid JavaScript. A browser cannot parse `<ExerciseListItem />` — it
-only understands standard JS. Vite runs a compiler (via `@vitejs/plugin-react`)
-that transforms JSX into `React.createElement(...)` calls before the code is
-served or bundled. The JSX you write is a convenient authoring format;
-what runs in the browser is plain function calls.
+In phase 01, `ExerciseListItem` had one exercise hardcoded inside it. Rendering
+ten different exercises would have meant ten separate component files, each
+a near-identical copy. Props solve this: the parent holds the data and passes
+it in, the component renders whatever it receives. One component definition,
+any number of instances, each with its own data.
 
-### Splitting into components solves the single-file problem
+### Tailwind replaces the separate CSS files
 
-Right now the entire app is `App.tsx`. As the UI grows, one file becomes
-unmanageable — hard to read, hard to test, impossible to reuse. A component
-is a function with a clear responsibility: render one piece of the UI given
-the data it needs. Splitting into components creates boundaries. Each piece
-can be understood in isolation.
+The thought piece asked whether there was a better way to manage styles than
+maintaining separate CSS files per component. There is — and we resolve it
+here. Tailwind utility classes live directly in the JSX, alongside the markup
+they style. No separate file, no class name to invent, no import to manage.
 
-### The exercise data lives in the API
+### React Developer Tools now shows props
 
-The Tractus backend exposes a `GET /exercises` endpoint. Right now that data
-is not in any of our files — it lives in a database the API sits in front of.
-Getting it into a component is a two-step problem: fetch it over HTTP, then
-pass it to the component that renders it. Both of those steps come in later
-phases. For now we hardcode the data directly in the component so the
-component itself is the only new concept.
+In phase 01, the component tree had no data flowing through it — DevTools
+was not much more than a tree view. Now that components receive props, select
+any `ExerciseListItem` in the Components panel and observe the props displayed
+on the right. This is the beginning of DevTools as a debugging tool: you can
+see exactly what data a component received and verify it matches what you
+expected.
+
+### Layout components — deferred to phase 05
+
+Where a shared header or navigation bar lives in the component tree is a
+routing concern — it only makes sense once there are multiple pages to navigate
+between. This is resolved in phase 05 when React Router is introduced.
+
+### Testing — carried forward
+
+Testing is deferred until there is enough app to make the tradeoffs concrete.
+It will be addressed once the component tree has props, state, and API calls
+in play.
 
 ---
 
-## 💡 Why JSX
+## 💡 Why Tailwind
 
-The browser cannot render a component directly — it only understands HTML,
-CSS, and JavaScript. JSX is a syntax extension that lets us describe the UI
-structure in markup-like notation inside a `.tsx` file. Vite compiles it down
-to plain `React.createElement(...)` calls before anything reaches the browser.
+Styling with separate CSS files works but creates friction as the component
+tree grows: every component needs its own file, its own class names, and an
+import to wire them together. The styles live separately from the markup they
+describe, which means context-switching between two files to understand one
+component.
 
-JSX exists to make the tree structure of the UI visible at a glance. It is
-not HTML — it is a notation for describing React elements. Open
-[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx) and read
-it alongside the rendered output in the browser. The shape of the JSX and the
-shape of the DOM should match exactly.
+Tailwind puts the styles where the markup is. A utility class like `text-sm`
+or `font-bold` is read directly in the JSX alongside the element it affects.
+The component is self-contained — one file describes both structure and
+appearance.
+
+The alternative we considered was Bootstrap. Bootstrap gives you pre-built
+components — buttons, cards, navbars — with an opinionated design system
+attached. That is limiting: you are building inside Bootstrap's constraints
+rather than composing your own design. Tailwind gives you utilities, not
+components, so the design decisions remain yours.
+
+The tradeoff worth naming: Tailwind utility classes are shorthand for CSS
+properties you should know. `flex`, `justify-center`, and `gap-4` map
+directly to `display: flex`, `justify-content: center`, and `gap: 1rem`.
+The shorthand is convenient, but if a class name is unfamiliar, look up
+the underlying property — that is what the browser is actually applying.
 
 ---
 
 ## ⏮️ What we built in the previous branch
 
-The `main` branch is a Vite + React + TypeScript scaffold. It renders the
-default Vite welcome screen from a single `App.tsx` file. No domain code,
-no Tractus data, no structure — just a working build pipeline and a mount
-point in `index.html`.
+Phase 01 produced a single `ExerciseListItem` component with one hardcoded
+exercise and no styling. `App` rendered it directly. The build pipeline and
+component model were established; the data flow and visual design were not.
 
 ---
 
 ## 🎯 What we're doing in this branch
 
-- Strip the Vite default content from `App.tsx` and `App.css`
-- Write a static `ExerciseListItem` component with hardcoded exercise data
-- Render `ExerciseListItem` from `App`
+- Install Tailwind CSS and remove the remaining plain CSS files
+- Define an `Exercise` TypeScript type
+- Add props to `ExerciseListItem` so it renders any exercise passed to it
+- Create an `ExerciseList` component that renders a list of `ExerciseListItem` components
+- Render `ExerciseList` from `App` with a hardcoded array of exercises
+- Apply Tailwind classes throughout
 
 ---
 
 ## 🏆 The abstraction we earned
 
-> A component is a function that returns JSX. That is the whole model.
-> Everything React does — state, effects, context, routing — is built on top
-> of this one idea. Getting it completely clear now means every later concept
-> has a solid foundation to attach to.
+> Props decouple the component from its data. `ExerciseListItem` no longer
+> knows or cares which exercise it is rendering — it renders whatever it
+> receives. That single change transforms it from a one-off static file into
+> a reusable piece. `ExerciseList` can now render ten exercises, a hundred,
+> or zero — the component does not change, only the array passed to it does.
 
 ---
 
 ## 🧑🏻‍🏫 Learning goals
 
 ### Understand
-- **Explain** what JSX is and why it needs to be compiled before reaching the browser.
-- **Describe** the relationship between a React component and the DOM element(s) it produces.
+- **Explain** what props are and how they flow through the component tree.
+- **Describe** why React requires a `key` prop when rendering lists and what
+  problem it solves.
 
 ### Apply
-- **Write** a React function component that returns valid JSX.
-- **Render** a component from another component.
-- **Use** React Developer Tools to inspect the component tree and compare it to the browser DOM.
+- **Pass** data into a component via props and render it.
+- **Render** an array of items using `.map()` with a unique `key` on each element.
+- **Use** Tailwind utility classes to style components without a separate CSS file.
 
 ### Analyze
-- **Identify** the differences between JSX and HTML (className vs class, self-closing tags, expressions in `{}`).
-- **Trace** the path from a JSX expression to the DOM node it produces.
+- **Examine** the component tree in React Developer Tools and verify the props
+  each component received match the data passed by its parent.
+- **Identify** what would break if two items in a list shared the same `key`.
+
+### Evaluate
+- **Assess** the tradeoff between Tailwind and Bootstrap — in what kind of
+  project might Bootstrap be the better choice?
 
 ---
 
@@ -140,26 +178,39 @@ point in `index.html`.
 
 | Concept | Plain English |
 |---|---|
-| **JSX** | A syntax extension that lets you write HTML-like markup inside JavaScript. It is compiled to `React.createElement` calls before the browser sees it. |
-| **Component** | A function whose name starts with a capital letter and returns JSX. React calls this function to know what to render. |
-| **`className`** | The JSX equivalent of HTML's `class` attribute. JSX uses camelCase because `class` is a reserved word in JavaScript. |
-| **Expression in `{}`** | Any JavaScript expression inside curly braces is evaluated and its result is rendered. `{2 + 2}` renders `4`. |
-| **Single root element** | A component must return a single root element. Use a `<div>` or a Fragment (`<>...</>`) to wrap multiple siblings. |
+| **Props** | Data passed from a parent component to a child. The child receives them as a function argument and renders them. Props flow down — a child never passes data up to its parent through props. |
+| **`key`** | A unique identifier React requires on each item when rendering a list. It lets React track which item is which across re-renders without re-rendering the whole list. |
+| **`.map()`** | A JavaScript array method that transforms each item in an array into something else — in React, typically a JSX element. It returns a new array; it does not change the original. |
+| **Type / Interface** | A TypeScript definition that describes the shape of an object. Lets the compiler catch a wrong or missing prop before the code runs. |
+| **Tailwind utility class** | A single-purpose CSS class that applies one style rule. Composed directly in JSX rather than defined in a separate stylesheet. |
 
 ---
 
 ## 🔍 What to notice in the code
 
+**[`src/types/exercise.ts`](src/types/exercise.ts)**
+The `Exercise` type defines the shape of the data flowing through the
+component tree. Every prop typed as `Exercise` is checked against this
+definition at compile time — a missing field or a typo in a property name
+is a build error, not a runtime surprise.
+
 **[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx)**
-The component is a plain function — no class, no lifecycle methods, nothing
-special. It returns JSX describing one exercise. The data is hardcoded inside
-the function body. In phase 02 this hardcoded data will be replaced by props
-passed in from the parent — but the component itself will barely change.
+Compare this file to the phase-01 version. The JSX structure is almost
+identical — the only change is that the hardcoded values are replaced by
+expressions in `{}` reading from the `exercise` prop. This is the pattern:
+the component's shape is fixed, its data is variable.
+
+**[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
+The `.map()` call is the entire rendering logic. Each `ExerciseListItem`
+gets a `key` and an `exercise` prop. Notice that `ExerciseList` does not
+know what an exercise looks like — it only knows it has an array of them and
+a component that can render one.
 
 **[`src/App.tsx`](src/App.tsx)**
-`App` renders `<ExerciseListItem />` the same way it would render any HTML element.
-The capital letter is how React knows to call the function rather than look for
-a built-in HTML tag named `exerciselistitem`.
+`App` is the only place the hardcoded exercise data lives. It passes the
+array down to `ExerciseList`. In phase 04 this hardcoded array will be
+replaced by data fetched from the API — but `ExerciseList` and
+`ExerciseListItem` will not change.
 
 ---
 
@@ -177,54 +228,47 @@ App runs at `http://localhost:5173`. No backend required — all data is hardcod
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-Open the browser DevTools Elements panel and inspect the rendered HTML. Is there
-a `<ExerciseListItem>` element anywhere in the DOM? What does the browser actually
-see? Now install the [React Developer Tools](https://react.dev/learn/react-developer-tools)
-browser extension and open the Components panel. What do you see there that the
-Elements panel does not show? What is the difference between the two views, and
-why does that difference exist?
+Open React Developer Tools and select an `ExerciseListItem` in the component
+tree. What props does it show? Now change one of the hardcoded exercise values
+in `App.tsx` and save — what updates in the UI and in DevTools? What does this
+tell you about when React re-renders a component?
 
 **Challenge 2 — Analytical**
-JSX looks like HTML but it is not. Find three ways JSX differs from HTML in
-this codebase. For each one, explain why the difference exists.
+Remove the `key` prop from the `.map()` in `ExerciseList`. What warning appears
+in the console? Read the warning carefully — what is React telling you, and why
+does it need the key to manage a list efficiently?
 
 **Challenge 3 — Additive**
-Create a second component: `ExerciseDetail`. It should display all the fields
-an exercise has — name, category, movement pattern, primary muscle, laterality,
-and SI risk. Hardcode a different exercise than `ExerciseListItem` uses. Render
-both components side by side in `App`.
+Add a `siRisk` badge to `ExerciseListItem` that changes colour depending on
+the value — green for `low`, yellow for `medium`, red for `high`. Use Tailwind
+conditional classes. How do you decide which class to apply based on a prop value?
 
 **Challenge 4 — Analytical**
-A component must return a single root element. What happens if you try to
-return two sibling elements without a wrapper? Fix it using a Fragment
-(`<>...</>`) instead of a `<div>` and observe the difference in the rendered
-DOM.
+`App` currently holds the exercise data as a hardcoded array. As the app grows,
+is `App` the right place for this? What would happen if two different parts of
+the UI needed the same exercise data? Where else could it live?
+
+**Challenge 5 — Additive (stretch)**
+Add a second prop to `ExerciseListItem`: `isSelected` (boolean). When true,
+render the item with a highlighted border. Render one item as selected in
+`ExerciseList`. What will it take to make the selection interactive in a
+later phase?
 
 ---
 
 ## 💭 Thought pieces for next time
 
-1. `ExerciseListItem` has one exercise hardcoded inside it. If we want to render
-   ten different exercises — each with different data — what would we have to
-   change? What would a better design look like, and what would the component
-   need to receive from outside itself?
-2. Some UI elements appear in every view — a header, a nav bar, a footer. Where
-   would those live in a component tree, and how would they relate to components
-   like `ExerciseListItem`?
-4. `ExerciseListItem` has no styles yet. As the component tree grows, each component
-   will need its own CSS. That means more files, more imports, more names to
-   invent. Is there a different way to manage styles that keeps everything closer
-   to the component? Consider two options: a utility-first framework like Tailwind
-   that puts styles directly in the JSX, or a component framework like Bootstrap
-   that gives you pre-built components. What is the tradeoff between the two?
-5. Once components receive props and hold state, what do you think React Developer
-   Tools will show that it cannot show right now? What would make it a genuinely
-   useful debugging tool rather than just a tree view?
-6. We have a component — how would you test it? What would you even assert? And
-   is there a way to write the test *before* the component — letting the test
-   define what the component should do rather than the other way around?
+1. The exercise list is static — it renders once and never changes. What if
+   we wanted to let the user select an exercise, or toggle between a list view
+   and a detail view? What would the component need that it does not have now?
+2. The hardcoded array in `App` is a stand-in for real API data. When we
+   replace it with a fetch call, something has to happen between "the component
+   mounts" and "the data arrives". What should the UI show during that gap?
+3. Two components now share a relationship: `ExerciseList` knows about
+   `ExerciseListItem`. As more components are added, how should we organise
+   the `components` folder — and does it matter yet?
 
 ---
 
-*Previous branch: [`main`]*
-*Next branch: [`phase-02_react_props-and-lists`]*
+*Previous branch: [`phase-01_react_jsx-and-components`]*
+*Next branch: [`phase-03_react_state-and-events`]*
