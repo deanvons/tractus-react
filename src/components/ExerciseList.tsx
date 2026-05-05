@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Exercise } from '../types/exercise'
 import ExerciseListItem from './ExerciseListItem'
+import { getExercises } from '../services/exerciseService'
 
 function ExerciseList() {
   const [exercises, setExercises] = useState<Exercise[]>([])
@@ -30,19 +31,8 @@ function ExerciseList() {
    * will not know or care how the data is fetched, only that it arrives.
    */
   useEffect(() => {
-    fetch('http://localhost:8080/api/exercises')
-      .then((response) => {
-        if (!response.ok) {
-          /*
-           * response.ok is false for 4xx and 5xx status codes. fetch() does
-           * not throw on these — it only rejects on network failure. Checking
-           * response.ok catches server errors that a try/catch alone would miss.
-           */
-          throw new Error(`Server error: ${response.status}`)
-        }
-        return response.json()
-      })
-      .then((data: Exercise[]) => {
+    getExercises()
+      .then((data) => {
         setExercises(data)
         setIsLoading(false)
       })
