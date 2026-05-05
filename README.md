@@ -176,9 +176,12 @@ App runs at `http://localhost:5173`. No backend required — all data is hardcod
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-Open DevTools and inspect the rendered HTML. Find the `ExerciseListItem` component
-in the DOM. Is there a `<ExerciseListItem>` element? What does the browser actually
-see? What does this tell you about what React components are?
+Open the browser DevTools Elements panel and inspect the rendered HTML. Is there
+a `<ExerciseListItem>` element anywhere in the DOM? What does the browser actually
+see? Now install the [React Developer Tools](https://react.dev/learn/react-developer-tools)
+browser extension and open the Components panel. What do you see there that the
+Elements panel does not show? What is the difference between the two views, and
+why does that difference exist?
 
 **Challenge 2 — Analytical**
 JSX looks like HTML but it is not. Find three ways JSX differs from HTML in
@@ -214,6 +217,13 @@ DOM.
    to the component? Consider two options: a utility-first framework like Tailwind
    that puts styles directly in the JSX, or a component framework like Bootstrap
    that gives you pre-built components. What is the tradeoff between the two?
+5. React Developer Tools shows you the component tree — the React view of your app.
+   Right now there is only one component and no data flowing through it. What do
+   you think the DevTools will show once components receive props and hold state?
+   What would make it a useful debugging tool?
+6. We have a component — how would you test it? What would you even assert? And
+   is there a way to write the test *before* the component — letting the test
+   define what the component should do rather than the other way around?
 
 ---
 
