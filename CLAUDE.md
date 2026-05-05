@@ -258,6 +258,10 @@ to Analyze and Evaluate.
 - Do not commit tokens, secrets, or API keys
 - Do not write comments that describe what the code does — explain why
   and point forward to what will replace it in a later branch
+- Multiline comments must use block comment style `/* */` so they are
+  collapsible in VS Code. Use `// single line` only for one-liners.
+  Inside JSX, `{/* */}` is valid but only inside a parent element — never
+  at the root of a return statement. Place block comments above the return.
 - Do not add packages or patterns before the phase that introduces them
 - One to two topics per phase — if you are adding a third, stop and defer
 
