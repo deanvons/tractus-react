@@ -1,32 +1,27 @@
-import { useState } from 'react'
-import type { Exercise } from './types/exercise'
+import { Routes, Route } from 'react-router-dom'
 import ExerciseList from './components/ExerciseList'
-import ExerciseDetail from './components/ExerciseDetail'
+import ExerciseDetailPage from './pages/ExerciseDetailPage'
 
 /*
- * selectedExercise lives in App — not in ExerciseList — because two sibling
- * components need it: ExerciseList (to highlight the selected item) and
- * ExerciseDetail (to show the full data). State that two siblings share must
- * live in their common ancestor. That ancestor is App.
+ * selectedExercise state is gone. App no longer coordinates between two
+ * sibling components — it defines a route map. The URL is the state now:
+ * '/' renders the list, '/exercises/:id' renders the detail page.
+ * Each route is an independent subtree with its own data fetching.
  */
 function App() {
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Tractus</h1>
-      <div className="flex gap-6">
-        <div className="flex-1">
-          <ExerciseList
-            selectedId={selectedExercise?.id ?? null}
-            onSelect={setSelectedExercise}
-          />
-        </div>
-        <div className="w-72">
-          <ExerciseDetail exercise={selectedExercise} />
-        </div>
-      </div>
-    </main>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <main className="max-w-4xl mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-6">Tractus</h1>
+            <ExerciseList />
+          </main>
+        }
+      />
+      <Route path="/exercises/:id" element={<ExerciseDetailPage />} />
+    </Routes>
   )
 }
 

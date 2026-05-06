@@ -4,16 +4,12 @@ import ExerciseListItem from './ExerciseListItem'
 import { getExercises } from '../services/exerciseService'
 
 /*
- * selectedId and onSelect are now props — ExerciseList no longer owns the
- * selection. App holds the selected exercise so it can pass it to ExerciseDetail.
- * ExerciseList only knows which id is selected so it can highlight the right item.
+ * selectedId and onSelect are gone. ExerciseList no longer coordinates with
+ * a sibling detail panel — there is no sibling. Each list item is a Link and
+ * navigating to an exercise is entirely self-contained in ExerciseListItem.
+ * This component's only job is to fetch and render the list.
  */
-interface Props {
-  selectedId: string | null
-  onSelect: (exercise: Exercise | null) => void
-}
-
-function ExerciseList({ selectedId, onSelect }: Props) {
+function ExerciseList() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,19 +57,10 @@ function ExerciseList({ selectedId, onSelect }: Props) {
     )
   }
 
-  function handleSelect(exercise: Exercise) {
-    onSelect(exercise.id === selectedId ? null : exercise)
-  }
-
   return (
     <ul className="flex flex-col gap-4">
       {exercises.map((exercise) => (
-        <ExerciseListItem
-          key={exercise.id}
-          exercise={exercise}
-          isSelected={selectedId === exercise.id}
-          onSelect={handleSelect}
-        />
+        <ExerciseListItem key={exercise.id} exercise={exercise} />
       ))}
     </ul>
   )
