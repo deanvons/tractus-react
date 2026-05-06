@@ -13,6 +13,12 @@ interface Props {
   onSelect: (id: string) => void
 }
 
+const siRiskClass: Record<string, string> = {
+  low: 'bg-green-100 text-green-700',
+  medium: 'bg-yellow-100 text-yellow-700',
+  high: 'bg-red-100 text-red-700',
+}
+
 function ExerciseListItem({ exercise, isSelected, onSelect }: Props) {
   return (
     <li
@@ -27,7 +33,12 @@ function ExerciseListItem({ exercise, isSelected, onSelect }: Props) {
         <li><span className="font-medium">Movement pattern:</span> {exercise.movementPattern}</li>
         <li><span className="font-medium">Primary muscle:</span> {exercise.primaryMuscle}</li>
         <li><span className="font-medium">Laterality:</span> {exercise.laterality}</li>
-        <li><span className="font-medium">SI risk:</span> {exercise.siRisk}</li>
+        <li>
+          <span className="font-medium">SI risk:</span>{' '}
+          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${siRiskClass[exercise.siRisk] ?? 'bg-gray-100 text-gray-600'}`}>
+            {exercise.siRisk}
+          </span>
+        </li>
       </ul>
     </li>
   )
