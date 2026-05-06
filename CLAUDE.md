@@ -259,8 +259,9 @@ readable.
 - **Mixed challenges** (analytical question + code extension) — implement the
   code part; the analytical part is discussed in class
 
-Solution commits come after the feature commits on the same branch. The pattern
-per branch is: README → feature commits → challenge solution commits.
+Solution commits are the first commits on the new branch, before the README
+and feature commits. The pattern per branch is: solution commits (previous
+phase's challenges) → README → feature commits.
 
 ---
 
