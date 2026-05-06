@@ -10,7 +10,7 @@ import type { Exercise } from '../types/exercise'
 interface Props {
   exercise: Exercise
   isSelected: boolean
-  onSelect: (id: string) => void
+  onSelect: (exercise: Exercise | null) => void
 }
 
 function ExerciseListItem({ exercise, isSelected, onSelect }: Props) {
@@ -19,7 +19,7 @@ function ExerciseListItem({ exercise, isSelected, onSelect }: Props) {
       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
         isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
       }`}
-      onClick={() => onSelect(exercise.id)}
+      onClick={() => onSelect(exercise)}
     >
       <h2 className="text-sm font-semibold">{exercise.name}</h2>
       <p className="text-xs text-gray-500 mt-0.5">{exercise.movementPattern}</p>
