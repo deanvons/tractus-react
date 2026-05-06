@@ -225,7 +225,7 @@ npm run dev
 **The backend must be running** at `http://localhost:8080`.
 
 To observe the CORS error deliberately:
-1. Start the API on a branch *without* CORS configured
+1. Start the API on branch `phase-12_security_spring-security-jwt` (no CORS config)
 2. Load the app — open DevTools > Console and note the error
 3. Switch the API to the CORS-fix branch (see API repo issue #[TBD])
 4. Reload — the exercises should load
