@@ -54,17 +54,27 @@ function ExerciseList() {
     setSelectedId((current) => (current === id ? null : id))
   }
 
+  const selectedExercise = exercises.find((e) => e.id === selectedId) ?? null
+
   return (
-    <ul className="flex flex-col gap-4">
-      {exercises.map((exercise) => (
-        <ExerciseListItem
-          key={exercise.id}
-          exercise={exercise}
-          isSelected={selectedId === exercise.id}
-          onSelect={handleSelect}
-        />
-      ))}
-    </ul>
+    <>
+      <ul className="flex flex-col gap-4">
+        {exercises.map((exercise) => (
+          <ExerciseListItem
+            key={exercise.id}
+            exercise={exercise}
+            isSelected={selectedId === exercise.id}
+            onSelect={handleSelect}
+          />
+        ))}
+      </ul>
+      {selectedExercise && (
+        <div className="mt-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
+          <h2 className="text-lg font-semibold mb-1">{selectedExercise.name}</h2>
+          <p className="text-sm text-gray-600">{selectedExercise.category}</p>
+        </div>
+      )}
+    </>
   )
 }
 
