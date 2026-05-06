@@ -1,28 +1,23 @@
 # Tractus Frontend
 
-> **Phase 04 — Effects and Fetch** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 05 — Routing** | Tractus Frontend · Web Dev Bootcamp
 
-`useEffect` and `fetch` replace the hardcoded exercise data with a live call to
-the Tractus API.
+React Router turns a single-page application into one that feels like a
+multi-page website — with real URLs, back button support, and deep-linkable views.
 
-The hardcoded array in `ExerciseList` was always a stand-in. It let us focus on
-props, lists, and state without the complexity of asynchronous data. That
-complexity arrives now. A component that fetches data must handle three distinct
-states: loading (the request is in flight), error (something went wrong), and
-success (data has arrived). Each state needs a UI response. Managing all three
-with `useState` and `useEffect` is the pattern you will reach for every time a
-component needs external data.
+The app so far is one screen. Clicking an exercise highlights it in a sidebar
+panel, but the URL never changes. There is no way to link directly to an
+exercise, no back button history, and no concept of "pages". React Router
+changes all of that. Each view gets its own URL. Navigation becomes a first-class
+concern. The component that renders depends on the route — not on local state.
 
-We also take a first step toward separation of concerns: once the fetch is
-working inline, we extract it into a service module. The component should not
-care how data is fetched — only that it receives an array of exercises. The
-service owns the how; the component owns the what to render.
-
-> **A note on scope.** This phase introduces `useEffect` only for data
-> fetching on mount — the empty dependency array case. The full behaviour of
-> the dependency array and cleanup functions will be explored further as the
-> app grows. For now, the focus is on the fetch lifecycle and what the UI must
-> do while it waits.
+This phase also resolves a structural issue from the previous solution: the
+selected exercise was passed from `App` down to `ExerciseDetail` as a prop.
+That works for two levels, but it is the beginning of prop drilling — threading
+state through components that do not need it just to reach one that does.
+React Router sidesteps this for navigation state by putting the selection in
+the URL instead. The general problem of shared state across distant components
+is addressed properly in phase 12 with Redux.
 
 ---
 
@@ -30,14 +25,13 @@ service owns the how; the component owns the what to render.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why inline first, then extract](#-why-inline-first-then-extract)
+- [Why React Router](#-why-react-router)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
 - [Learning goals](#-learning-goals)
 - [Key concepts](#-key-concepts)
 - [What to notice in the code](#-what-to-notice-in-the-code)
-- [What the frontend revealed](#-what-the-frontend-revealed)
 - [Running this branch](#-running-this-branch)
 - [Challenges for students](#-challenges-for-students)
 - [Thought pieces for the next branch](#-thought-pieces-for-the-next-branch)
@@ -52,8 +46,8 @@ service owns the how; the component owns the what to render.
 | `phase-01_react_jsx-and-components` | JSX, first component, static render | Static markup |
 | `phase-02_react_props-and-lists` | Props, component tree, rendering lists, keys | Hardcoded data |
 | `phase-03_react_state-and-events` | `useState`, event handlers, local interactivity | Hardcoded data |
-| `📌 phase-04_react_effects-and-fetch` | **`useEffect`, fetch, lifecycle, loading/error state** | Live API data |
-| `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
+| `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
+| `📌 phase-05_routing_react-router` | **React Router, multi-page SPA, route params, nav** | Live API data |
 | `phase-06_forms_controlled-inputs` | Controlled inputs, filter form, form submission | Live API data |
 | `phase-07_react_hoc-pattern` | Higher-order components, `withLoading` wrapper | Live API data |
 | `phase-08_auth_keycloak-pkce` | Keycloak, auth code + PKCE, login/logout | Auth wall |
@@ -66,100 +60,105 @@ service owns the how; the component owns the what to render.
 
 ## ✅ Resolving the thought pieces
 
-### State is local — what happens when the user navigates away?
+### A URL like `/exercises/123` — what would need to exist?
 
-Still deferred — navigation does not exist yet. This becomes concrete in phase
-05 when React Router is introduced. At that point, losing state on navigation is
-real and the question of where to preserve it is worth discussing properly.
+We resolve it here. React Router maps URL patterns to components. The pattern
+`/exercises/:id` matches any exercise URL and makes the `id` segment available
+to the component via `useParams`. The component fetches the exercise for that
+ID and renders it. The URL is the state — no prop threading required.
 
-### What should the UI show while data is loading?
+### Prop drilling — state passed through components that don't need it
 
-We resolve it here. The component holds three pieces of state — `isLoading`,
-`error`, and `exercises` — and renders a different UI depending on which is
-active. This is the standard pattern for async data in React before any library
-abstracts it.
+The phase-04 challenge solution passed `selectedExercise` from `App` down to
+`ExerciseDetail`. Two levels is manageable; five levels is not. This is prop
+drilling — and it is a real problem as the component tree grows. React Router
+eliminates it for navigation state by replacing the sidebar panel with a
+dedicated route. The general solution for other shared state (auth, session
+data) is Redux, introduced in phase 12.
 
-### Threading callbacks through many levels
+### Service module memory between calls
 
-Still deferred — the component tree is still shallow enough that prop drilling
-is not painful. Phase 12 (Redux) is where global state management replaces
-threading. Holding the question open until the friction is real is deliberate.
+Still deferred. Two components calling the same service function independently
+will fire two separate requests. That is inefficient but not broken. Caching
+and request deduplication belong to a data-fetching library — the friction will
+be clear enough by the time we reach that point.
 
 ---
 
-## 💡 Why inline first, then extract
+## 💡 Why React Router
 
-Writing the fetch call directly inside `ExerciseList` makes every step visible:
-where the effect runs, how state is updated at each stage, what the component
-renders in between. Hiding it in a function from the start would obscure the
-mechanics at the moment students most need to see them.
+Without a router, the browser's URL never changes. Every view is produced by
+local state — a boolean flag, a selected ID — and the URL stays the same
+regardless of what the user is looking at. That means no bookmarks, no shared
+links, no back button, and no way to land directly on a specific exercise.
 
-Once it is working, extracting the fetch to a service module is a refactor with
-a clear motivation — the component should not care how data is fetched, only
-that it receives exercises. That separation becomes load-bearing when a second
-component needs the same data. Writing the service before that moment would be
-premature; writing it after is earned.
+React Router maps URL patterns to components. When the URL is `/`, render the
+list. When the URL is `/exercises/123`, render the detail view for exercise 123.
+The URL becomes the source of truth for what is on screen — not a state variable
+in a component.
+
+Without React Router we would manage URL changes with `window.history.pushState`
+and `window.location` directly, parsing the pathname manually to decide what to
+render. React Router automates that. By this point, having written the pattern
+manually would be tedious enough that the library earns its place.
 
 ---
 
 ## ⏮️ What we built in the previous branch
 
-Phase 03 introduced `useState` and event handlers. `ExerciseList` tracks which
-exercise is selected; `ExerciseListItem` reports clicks via a callback prop and
-highlights itself when selected. The data was still a hardcoded array — the
-component tree was interactive but not connected to anything real.
+Phase 04 replaced hardcoded data with a real fetch via `useEffect`. The app
+shows a live list of exercises with loading, error, and success states. Clicking
+an exercise passes the selection up to `App`, which renders `ExerciseDetail` as
+a sidebar panel. The URL never changes.
 
 ---
 
 ## 🎯 What we're doing in this branch
 
-- Replace the hardcoded `exercises` array with `useState` holding `Exercise[]`
-- Add `isLoading` and `error` state to `ExerciseList`
-- Add a `useEffect` that fires on mount and fetches `GET /exercises`
-- Render loading and error states conditionally
-- Refactor the fetch call into `src/services/exerciseService.ts`
+- Install React Router and wrap the app in `BrowserRouter`
+- Define routes in `App`: `/` for the list, `/exercises/:id` for the detail
+- Remove the sidebar `ExerciseDetail` panel — detail is now a separate route
+- Add `Link` to `ExerciseListItem` so clicking navigates rather than selects
+- Create `ExerciseDetailPage` that reads the ID from `useParams` and fetches the exercise
+- Remove `selectedExercise` state from `App` — the URL carries the selection now
 
 ---
 
 ## 🏆 The abstraction we earned
 
-> `useEffect` is the hook that connects a component to the world outside React.
-> Without it, a component can only respond to props and state — it has no way
-> to reach out to an API, set up a subscription, or do anything that has a
-> side effect. Every data-fetching pattern you will encounter — React Query,
-> SWR, custom hooks — is built on top of `useEffect`. Understanding what it
-> does before a library wraps it is what makes those abstractions legible later.
-
-`useEffect` is the second hook we have used. Like `useState`, it is a function
-React provides that gives a component access to something it could not reach as
-a plain function — in this case, the component's lifecycle. The empty dependency
-array `[]` tells React to run the effect once, after the first render. That is
-the mount. We will encounter other dependency array patterns as the app grows.
+> React Router abstracts the browser's History API — the mechanism that lets
+> JavaScript applications change the URL without a full page reload. Without it,
+> every navigation would require `window.history.pushState`, manual URL parsing,
+> and a custom mechanism to re-render the right component. React Router handles
+> all of that and gives us a declarative API: define which component maps to
+> which URL pattern, and the framework does the rest. The same principle applies
+> here as everywhere else in this course — understand what the library is doing
+> before you let it do it for you.
 
 ---
 
 ## 🧑🏻‍🏫 Learning goals
 
 ### Understand
-- **Explain** what a side effect is and why React isolates them inside `useEffect`.
-- **Describe** the three states a data-fetching component must handle: loading,
-  error, and success.
+- **Explain** what a single-page application is and how React Router simulates
+  navigation without a full page reload.
+- **Describe** why putting the selected exercise in the URL is better than
+  keeping it in component state.
 
 ### Apply
-- **Use** `useEffect` with an empty dependency array to fetch data on mount.
-- **Update** multiple pieces of state in sequence as a fetch moves through its
-  lifecycle.
-- **Render** different UI conditionally based on loading and error state.
+- **Define** routes using `<Routes>` and `<Route>` and map them to components.
+- **Use** `useParams` to read a URL segment inside a component.
+- **Navigate** programmatically and declaratively using `Link` and `useNavigate`.
 
 ### Analyze
-- **Examine** what the component renders at each stage of the fetch lifecycle —
-  before the effect runs, while the request is in flight, and after it settles.
-- **Identify** why the fetch cannot be called directly in the component body
-  and must live inside `useEffect`.
+- **Examine** what the browser's History API does and identify where React
+  Router sits on top of it.
+- **Identify** what was lost by removing the sidebar panel and what was gained
+  by giving the detail view its own URL.
 
 ### Evaluate
-- **Assess** the tradeoff between keeping fetch logic inline and extracting it
-  to a service — when does the extraction pay off, and when is it premature?
+- **Assess** the tradeoff between URL-based state and component state — when
+  should something live in the URL and when should it stay local?
 
 ---
 
@@ -167,51 +166,51 @@ the mount. We will encounter other dependency array patterns as the app grows.
 
 | Concept | Plain English |
 |---|---|
-| **`useEffect`** | A hook that runs code after a component renders. Used for side effects — anything that reaches outside React, like a fetch call, a timer, or a DOM manipulation. |
-| **Side effect** | Any operation that affects something outside the component — an API call, a console log, a DOM update. React separates side effects from rendering deliberately. |
-| **Dependency array** | The second argument to `useEffect`. Controls when the effect re-runs. An empty array `[]` means run once on mount. Omitting it means run after every render. |
-| **Mount** | The moment React first renders a component into the DOM. The empty-array `useEffect` fires once at this point. |
-| **Loading state** | A boolean that is `true` while a request is in flight. Used to show a spinner or placeholder so the user knows something is happening. |
-| **Error state** | A value that holds an error message (or `null`) after a failed request. Used to show feedback and prevent rendering broken UI. |
-| **Service module** | A plain TypeScript file that owns the details of how data is fetched — the URL, the response shape, the error handling. Components import from it without knowing those details. |
+| **SPA** | Single-page application. One HTML file, JavaScript renders the UI. The browser never does a full reload — React Router intercepts navigation and swaps components instead. |
+| **`BrowserRouter`** | The provider component that gives the rest of the app access to routing. Wraps the entire application, usually in `main.tsx`. |
+| **`Routes` / `Route`** | Declarative route definitions. `<Route path="/exercises/:id" element={<ExerciseDetailPage />} />` maps a URL pattern to a component. |
+| **Route param** | A named segment in a URL pattern (`:id`). React Router captures its value and makes it available via `useParams`. |
+| **`useParams`** | A hook that returns the current route's params as an object. Inside `/exercises/:id`, `useParams().id` gives you the exercise ID. |
+| **`Link`** | A component that renders an anchor tag but uses React Router's history instead of a full browser navigation. |
+| **`useNavigate`** | A hook that returns a function for programmatic navigation — for when you need to navigate as a result of an event, not a click on a link. |
+| **Prop drilling** | Passing state through intermediate components that do not use it, just to reach a deeply nested one. The URL eliminates it for navigation state. Redux eliminates it for shared application state (phase 12). |
 
 ---
 
 ## 🔍 What to notice in the code
 
-**[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
-Before the refactor, this file contains the full fetch lifecycle in one place.
-Read through it in order: state is declared, the effect fires after mount, state
-is updated at each stage, the JSX switches on `isLoading` and `error` before
-rendering the list. After the refactor, the effect body shrinks to a single
-call into the service — the shape stays the same, the implementation detail
-moves out.
+**[`src/main.tsx`](src/main.tsx)**
+`BrowserRouter` wraps the entire app here. This is where React Router's context
+is established — every component inside can access routing hooks and respond to
+URL changes.
 
-**[`src/services/exerciseService.ts`](src/services/exerciseService.ts)**
-A plain async function that returns `Promise<Exercise[]>`. No React in here —
-just a fetch call, a response check, and a JSON parse. The component does not
-know this file exists beyond the import. If the API base URL changed, this is
-the only file that would need to update.
+**[`src/App.tsx`](src/App.tsx)**
+Compare this file to the phase-04 version. The `selectedExercise` state is gone.
+`App` no longer coordinates between `ExerciseList` and `ExerciseDetail` — the
+URL does that now. `App` defines the route map and that is its only job.
+
+**[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx)**
+`onClick` is replaced by a `Link` to `/exercises/:id`. The component no longer
+calls a callback — it navigates. The parent does not need to know a click
+happened.
+
+**[`src/pages/ExerciseDetailPage.tsx`](src/pages/ExerciseDetailPage.tsx)**
+`useParams` pulls the exercise ID out of the URL. The component fetches that
+specific exercise and manages its own loading and error states — the same
+pattern as `ExerciseList`, applied to a single resource.
 
 ---
 
 ## 🌐 What the frontend revealed
 
-The browser enforces CORS — a security policy that blocks a script on one origin
-from reading a response from a different origin. Our frontend runs on
-`http://localhost:5173` and the API runs on `http://localhost:8080`. They are
-different origins. Without a CORS header on the API response, the browser will
-block the fetch even if the request reaches the server.
+`ExerciseDetailPage` needs `GET /exercises/:id`. If the backend does not expose
+this endpoint, the detail page cannot load data — the list gives us IDs but no
+way to retrieve a single exercise.
 
-> **API LEARNING MOMENT:** The backend needs to allow `http://localhost:5173`
-> as a permitted origin. This is configured on the server — the frontend cannot
-> work around it. See API repo issue #1 and the corresponding fix branch for
-> the backend change required. **Do not spend time fully understanding CORS at
-> this stage.** The goal here is to encounter the error, understand that it
-> exists for a security reason, and know how to unblock yourself. CORS is
-> revisited properly in phase 08 when security becomes the explicit topic.
-> For now: the frontend and backend are separate deployments with a boundary
-> between them, and the browser enforces that boundary.
+> **API LEARNING MOMENT:** Does `GET /exercises/:id` exist in the Tractus API?
+> Check the Swagger UI at `http://localhost:8080/swagger-ui/index.html`. If it
+> does not exist, what would the response shape need to look like, and what HTTP
+> status should it return for an unknown ID?
 
 ---
 
@@ -222,17 +221,7 @@ npm install
 npm run dev
 ```
 
-**The backend must be running** at `http://localhost:8080`.
-
-To observe the CORS error deliberately:
-1. Start the API on branch `phase-12_security_spring-security-jwt` (no CORS config)
-2. Load the app — open DevTools > Console and note the error
-3. Switch the API to the CORS-fix branch (see API repo issue #1)
-4. Reload — the exercises should load
-
-You do not need to fully understand CORS yet. The goal is to see the error,
-recognise that the browser is enforcing a security boundary, and know which
-knob to turn to unblock it. The full explanation is in phase 08.
+The backend must be running at `http://localhost:8080` (CORS-fix branch).
 
 App runs at `http://localhost:5173`.
 
@@ -241,58 +230,47 @@ App runs at `http://localhost:5173`.
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-Open the Network tab in DevTools before the page loads. Reload the page and
-watch the request to `GET /exercises` appear. What status code does it return?
-What does the response body look like? Does the shape match the `Exercise` type
-defined in `src/types/exercise.ts`?
+Open the browser and navigate to an exercise detail page. Copy the URL and open
+it in a new tab. What happens? Now try the same thing with the phase-04 version
+where selection was local state. What is the fundamental difference, and why
+does it matter for real applications?
 
 **Challenge 2 — Analytical**
-Remove the empty dependency array `[]` from the `useEffect` call. What happens?
-Open the Network tab — how many requests fire? Read the React error or warning
-in the console. What is React telling you, and why does the dependency array
-prevent this?
+`useParams` returns `{ id: string | undefined }`. Why might `id` be undefined,
+and how does `ExerciseDetailPage` handle that case? What would happen if you
+did not guard against it?
 
 **Challenge 3 — Analytical**
-Stop the backend and reload the page. What does the UI show? Find where in the
-code the error state is set. What does `response.ok` check, and what kind of
-errors would it catch that a try/catch alone would not?
+`App` no longer holds `selectedExercise` state. Where does the "which exercise
+is selected" information live now? What are the tradeoffs of storing navigation
+state in the URL versus in a component?
 
 **Challenge 4 — Additive**
-The loading state renders a plain text message. Replace it with a simple
-skeleton — grey placeholder blocks where the exercise cards will appear. What
-does this change about the user experience, and why do production apps prefer
-skeletons over spinners for list content?
+Add a back button to `ExerciseDetailPage` that returns the user to the exercise
+list. Use `useNavigate` rather than a `Link`. When would you choose `useNavigate`
+over `Link`?
 
-**Challenge 5 — Additive**
-`ExerciseDetail` is hardcoded — it always shows the same exercise regardless
-of what the user selects. Make it show the selected exercise instead. To do
-this you will need to give `ExerciseDetail` an `exercise` prop, lift the
-`selectedId` state from `ExerciseList` up to `App`, and pass the selected
-exercise down to both components. When nothing is selected, show a placeholder.
-What does this force you to realise about where state needs to live when two
-sibling components depend on it?
-
-**Challenge 6 — Additive (stretch)**
-Add a retry button to the error state. When clicked, it should re-trigger the
-fetch. What state or mechanism would you use to cause `useEffect` to run again
-after mount?
+**Challenge 5 — Additive (stretch)**
+The exercise list has no indication of which item the user last visited. Add an
+`active` style to the `Link` in `ExerciseListItem` when its route is the current
+URL. React Router provides a component that makes this straightforward — find it
+in the documentation.
 
 ---
 
 ## 💭 Thought pieces for the next branch
 
-1. The app is a single page — there is no way to navigate to a detail view for
-   a selected exercise, or to a different section entirely. If we wanted a URL
-   like `/exercises/123` that showed one exercise, what would need to exist in
-   the app that does not exist now?
-2. The service module is a plain function — it has no memory between calls. If
-   two components both called `getExercises()` at the same time, how many
-   network requests would fire? Is that the right behaviour?
-3. The `fetch` call has no timeout. If the server takes thirty seconds to
-   respond, the loading spinner spins for thirty seconds. What should a
-   production app do differently, and where would that logic live?
+1. The exercise list loads every time the user navigates back to `/`. There is
+   no memory of the previous fetch — the data is re-requested on every visit.
+   When would that be the right behaviour, and when would it be wasteful?
+2. Both `ExerciseList` and `ExerciseDetailPage` now have their own loading and
+   error states. As more pages are added, this pattern will repeat. What would
+   it take to avoid writing the same loading and error logic every time?
+3. The app has exercises but no way to search or filter them. A user with a long
+   exercise list has no choice but to scroll. What would a filter form need —
+   and where in the component tree would it live?
 
 ---
 
-*Previous branch: [`phase-03_react_state-and-events`]*
-*Next branch: [`phase-05_routing_react-router`]*
+*Previous branch: [`phase-04_react_effects-and-fetch`]*
+*Next branch: [`phase-06_forms_controlled-inputs`]*
