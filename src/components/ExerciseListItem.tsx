@@ -1,28 +1,23 @@
+import { Link } from 'react-router-dom'
 import type { Exercise } from '../types/exercise'
 
 /*
- * Two new props alongside exercise:
- * - isSelected: the parent tells this item whether it is the active one
- * - onSelect: a callback the parent passes down — the child calls it when
- *   clicked, the parent decides what to do with the id. The child has no
- *   opinion about what "selected" means globally; it only reports the event.
+ * onClick and onSelect are gone. The component no longer calls back to a
+ * parent — it navigates. Link renders an anchor tag but uses React Router's
+ * history instead of a full page reload. The parent does not need to know
+ * a click happened; the URL changes and React Router does the rest.
  */
 interface Props {
   exercise: Exercise
-  isSelected: boolean
-  onSelect: (exercise: Exercise | null) => void
 }
 
-function ExerciseListItem({ exercise, isSelected, onSelect }: Props) {
+function ExerciseListItem({ exercise }: Props) {
   return (
-    <li
-      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-      }`}
-      onClick={() => onSelect(exercise)}
-    >
-      <h2 className="text-sm font-semibold">{exercise.name}</h2>
-      <p className="text-xs text-gray-500 mt-0.5">{exercise.movementPattern}</p>
+    <li className="border border-gray-200 rounded-lg transition-colors hover:border-blue-500 hover:bg-blue-50">
+      <Link to={`/exercises/${exercise.id}`} className="block p-4">
+        <h2 className="text-sm font-semibold">{exercise.name}</h2>
+        <p className="text-xs text-gray-500 mt-0.5">{exercise.movementPattern}</p>
+      </Link>
     </li>
   )
 }
