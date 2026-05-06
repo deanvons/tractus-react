@@ -43,7 +43,16 @@ function ExerciseList() {
   }, [])
 
   if (isLoading) {
-    return <p className="text-gray-500">Loading exercises...</p>
+    return (
+      <ul className="flex flex-col gap-4">
+        {[...Array(4)].map((_, i) => (
+          <li key={i} className="border border-gray-200 rounded-lg p-4 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
+            <div className="h-3 bg-gray-100 rounded w-1/4" />
+          </li>
+        ))}
+      </ul>
+    )
   }
 
   if (error) {
