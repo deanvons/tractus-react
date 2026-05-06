@@ -205,7 +205,7 @@ block the fetch even if the request reaches the server.
 
 > **API LEARNING MOMENT:** The backend needs to allow `http://localhost:5173`
 > as a permitted origin. This is configured on the server — the frontend cannot
-> work around it. See API repo issue #[TBD] and the corresponding fix branch for
+> work around it. See API repo issue #1 and the corresponding fix branch for
 > the backend change required. **Do not spend time fully understanding CORS at
 > this stage.** The goal here is to encounter the error, understand that it
 > exists for a security reason, and know how to unblock yourself. CORS is
@@ -227,7 +227,7 @@ npm run dev
 To observe the CORS error deliberately:
 1. Start the API on branch `phase-12_security_spring-security-jwt` (no CORS config)
 2. Load the app — open DevTools > Console and note the error
-3. Switch the API to the CORS-fix branch (see API repo issue #[TBD])
+3. Switch the API to the CORS-fix branch (see API repo issue #1)
 4. Reload — the exercises should load
 
 You do not need to fully understand CORS yet. The goal is to see the error,
