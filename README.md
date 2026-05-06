@@ -267,9 +267,10 @@ in the console? Read the warning carefully — what is React telling you, and wh
 does it need the key to manage a list efficiently?
 
 **Challenge 3 — Additive**
-Add a `siRisk` badge to `ExerciseListItem` that changes colour depending on
-the value — green for `low`, yellow for `medium`, red for `high`. Use Tailwind
-conditional classes. How do you decide which class to apply based on a prop value?
+Add a category badge to `ExerciseListItem` that changes colour depending on
+the value — for example blue for `Strength`, orange for `Cardio`, green for
+`Mobility`. Use Tailwind conditional classes. How do you decide which class to
+apply based on a prop value?
 
 **Challenge 4 — Analytical**
 The exercise data lives in `ExerciseList` rather than in `App`. Why? What
