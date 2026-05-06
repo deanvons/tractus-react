@@ -17,6 +17,7 @@ function ExerciseList({ selectedId, onSelect }: Props) {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     getExercises()
@@ -28,7 +29,13 @@ function ExerciseList({ selectedId, onSelect }: Props) {
         setError(err.message)
         setIsLoading(false)
       })
-  }, [])
+  }, [retryCount])
+
+  function handleRetry() {
+    setIsLoading(true)
+    setError(null)
+    setRetryCount((c) => c + 1)
+  }
 
   if (isLoading) {
     return (
@@ -44,7 +51,14 @@ function ExerciseList({ selectedId, onSelect }: Props) {
   }
 
   if (error) {
-    return <p className="text-red-500">Failed to load exercises: {error}</p>
+    return (
+      <div>
+        <p className="text-red-500 mb-3">Failed to load exercises: {error}</p>
+        <button className="text-sm text-blue-600 underline" onClick={handleRetry}>
+          Retry
+        </button>
+      </div>
+    )
   }
 
   function handleSelect(exercise: Exercise) {
