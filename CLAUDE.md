@@ -248,6 +248,22 @@ to Analyze and Evaluate.
 
 ---
 
+## Challenge solutions
+
+Every branch that has additive challenges must include reference solution commits
+before it is pushed. Commit each solution separately so the git history is
+readable.
+
+- **Additive challenges** — implement the code and commit it
+- **Analytical challenges** — no commit needed; these are class discussion material
+- **Mixed challenges** (analytical question + code extension) — implement the
+  code part; the analytical part is discussed in class
+
+Solution commits come after the feature commits on the same branch. The pattern
+per branch is: README → feature commits → challenge solution commits.
+
+---
+
 ## What to avoid
 
 - Do not put code blocks in README files for teaching purposes — use prose and
