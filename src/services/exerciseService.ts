@@ -19,3 +19,18 @@ export async function getExercises(): Promise<Exercise[]> {
 
   return response.json()
 }
+
+/*
+ * A second function in the same module — same base URL, same error pattern,
+ * different resource. The pattern earned in getExercises applies unchanged.
+ * ExerciseDetailPage will call this with the ID it reads from the URL.
+ */
+export async function getExercise(id: string): Promise<Exercise> {
+  const response = await fetch(`http://localhost:8080/exercises/${id}`)
+
+  if (!response.ok) {
+    throw new Error(`Server error: ${response.status}`)
+  }
+
+  return response.json()
+}
