@@ -11,7 +11,7 @@ import type { Exercise } from '../types/exercise'
  * is not a React concern, it is an application concern.
  */
 export async function getExercises(): Promise<Exercise[]> {
-  const response = await fetch('http://localhost:8080/api/exercises')
+  const response = await fetch('http://localhost:8080/exercises')
 
   if (!response.ok) {
     throw new Error(`Server error: ${response.status}`)
