@@ -263,7 +263,16 @@ skeleton — grey placeholder blocks where the exercise cards will appear. What
 does this change about the user experience, and why do production apps prefer
 skeletons over spinners for list content?
 
-**Challenge 5 — Additive (stretch)**
+**Challenge 5 — Additive**
+`ExerciseDetail` is hardcoded — it always shows the same exercise regardless
+of what the user selects. Make it show the selected exercise instead. To do
+this you will need to give `ExerciseDetail` an `exercise` prop, lift the
+`selectedId` state from `ExerciseList` up to `App`, and pass the selected
+exercise down to both components. When nothing is selected, show a placeholder.
+What does this force you to realise about where state needs to live when two
+sibling components depend on it?
+
+**Challenge 6 — Additive (stretch)**
 Add a retry button to the error state. When clicked, it should re-trigger the
 fetch. What state or mechanism would you use to cause `useEffect` to run again
 after mount?
