@@ -199,6 +199,31 @@ happened.
 specific exercise and manages its own loading and error states — the same
 pattern as `ExerciseList`, applied to a single resource.
 
+**Component tree**
+
+```mermaid
+graph TD
+  BrowserRouter["BrowserRouter\n(main.tsx)"]
+  App["App\n(route definitions)"]
+  ExList["ExerciseList\n(path='/')"]
+  ELI1["ExerciseListItem"]
+  ELI2["ExerciseListItem"]
+  ELIn["…"]
+  DetailPage["ExerciseDetailPage\n(path='/exercises/:id')"]
+
+  BrowserRouter --> App
+  App -->|"route '/'"| ExList
+  App -->|"route '/exercises/:id'"| DetailPage
+  ExList -->|"Link /exercises/:id"| ELI1
+  ExList --> ELI2
+  ExList --> ELIn
+```
+
+The router sits above `App` in the tree. `App` no longer holds state — it holds
+routes. Each route renders a different subtree. Note: component diagrams
+conventionally show structure only. The route paths and Link labels are here
+because making the routing relationships explicit is the point of this phase.
+
 ---
 
 ## 🌐 What the frontend revealed
