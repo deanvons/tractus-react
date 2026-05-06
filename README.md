@@ -173,10 +173,12 @@ JSX looks like HTML but it is not. Find three ways JSX differs from HTML in
 this codebase. For each one, explain why the difference exists.
 
 **Challenge 3 — Additive**
-Create a second component: `ExerciseDetail`. It should display all the fields
-an exercise has — name, category, movement pattern, primary muscle, laterality,
-and SI risk. Hardcode a different exercise than `ExerciseListItem` uses. Render
-both components side by side in `App`.
+Create a second component: `ExerciseDetail`. Unlike `ExerciseListItem`, which
+is a compact row for scanning a list, `ExerciseDetail` should be a featured
+card — larger heading, more breathing room, a different visual hierarchy.
+Hardcode a different exercise than `ExerciseListItem` uses. Render both
+components side by side in `App`. Notice how the same data can be presented
+in completely different ways depending on context.
 
 **Challenge 4 — Analytical**
 A component must return a single root element. What happens if you try to
