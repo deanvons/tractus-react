@@ -205,10 +205,13 @@ block the fetch even if the request reaches the server.
 
 > **API LEARNING MOMENT:** The backend needs to allow `http://localhost:5173`
 > as a permitted origin. This is configured on the server — the frontend cannot
-> work around it. This is the first concrete evidence that the frontend and
-> backend are separate deployments with a boundary between them. In production,
-> the allowed origin would be the deployed frontend URL. What should the backend
-> do if a request comes from an origin not on its list?
+> work around it. See API repo issue #[TBD] and the corresponding fix branch for
+> the backend change required. **Do not spend time fully understanding CORS at
+> this stage.** The goal here is to encounter the error, understand that it
+> exists for a security reason, and know how to unblock yourself. CORS is
+> revisited properly in phase 08 when security becomes the explicit topic.
+> For now: the frontend and backend are separate deployments with a boundary
+> between them, and the browser enforces that boundary.
 
 ---
 
@@ -219,9 +222,17 @@ npm install
 npm run dev
 ```
 
-**The backend must be running.** Start the Tractus API at `http://localhost:8080`
-before loading the app. If the backend is not running, the fetch will fail and
-the error state will render.
+**The backend must be running** at `http://localhost:8080`.
+
+To observe the CORS error deliberately:
+1. Start the API on a branch *without* CORS configured
+2. Load the app — open DevTools > Console and note the error
+3. Switch the API to the CORS-fix branch (see API repo issue #[TBD])
+4. Reload — the exercises should load
+
+You do not need to fully understand CORS yet. The goal is to see the error,
+recognise that the browser is enforcing a security boundary, and know which
+knob to turn to unblock it. The full explanation is in phase 08.
 
 App runs at `http://localhost:5173`.
 
