@@ -50,6 +50,10 @@ function ExerciseList() {
     return <p className="text-red-500">Failed to load exercises: {error}</p>
   }
 
+  function handleSelect(id: string) {
+    setSelectedId((current) => (current === id ? null : id))
+  }
+
   return (
     <ul className="flex flex-col gap-4">
       {exercises.map((exercise) => (
@@ -57,7 +61,7 @@ function ExerciseList() {
           key={exercise.id}
           exercise={exercise}
           isSelected={selectedId === exercise.id}
-          onSelect={setSelectedId}
+          onSelect={handleSelect}
         />
       ))}
     </ul>
