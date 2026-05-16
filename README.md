@@ -243,10 +243,9 @@ Where does this value come from — does it need its own state, or is it
 already available?
 
 **Challenge 5 — Additive (stretch)**
-The filter runs on every keystroke. For a large list this could be slow.
-Add a debounce so the filter only applies 300ms after the user stops typing.
-Implement it without a library — a `setTimeout` and `clearTimeout` inside
-`useEffect` is enough.
+The text input has no associated `<label>` element — only a placeholder.
+Add a proper label and wire it to the input with `htmlFor` and `id`.
+Why does this matter beyond visual styling?
 
 ---
 
@@ -265,6 +264,10 @@ Implement it without a library — a `setTimeout` and `clearTimeout` inside
    and let the server return only the matching records. When would client-side
    filtering be the wrong choice, and what would the frontend need to change to
    support server-side filtering instead?
+4. The filter triggers a re-render on every keystroke. For a slow operation or
+   a very large list, debouncing — delaying the computation until the user has
+   stopped typing — is the standard fix. What React primitive would you use to
+   implement it, and when is the cost actually worth paying?
 
 ---
 
