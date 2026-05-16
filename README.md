@@ -210,6 +210,41 @@ reference on every render; including it would trigger infinite re-fetching. The
 `eslint-disable` comment on that line is deliberate — it signals that the
 trade-off is understood, not overlooked.
 
+**Render cycle**
+
+```mermaid
+sequenceDiagram
+  participant React
+  participant ExerciseList
+  participant useFetch
+  participant API
+
+  React->>ExerciseList: render
+  ExerciseList->>useFetch: useFetch(getExercises)
+  useFetch->>React: read fiber slots
+  React-->>useFetch: { data: null, isLoading: true }
+  useFetch-->>ExerciseList: { data: null, isLoading: true, error: null }
+  ExerciseList-->>React: skeleton JSX
+
+  Note over React,API: after render — effect fires
+  useFetch->>API: getExercises()
+  API-->>useFetch: exercises[]
+  useFetch->>React: setData(exercises) · setIsLoading(false)
+
+  Note over React,ExerciseList: state changed — re-render
+  React->>ExerciseList: render
+  ExerciseList->>useFetch: useFetch(getExercises)
+  useFetch->>React: read fiber slots
+  React-->>useFetch: { data: exercises[], isLoading: false }
+  useFetch-->>ExerciseList: { data: exercises[], isLoading: false, error: null }
+  ExerciseList-->>React: list JSX
+```
+
+The hook is just a function. The re-render is triggered by `setState` calls
+inside the effect — the same mechanism as any other state update in React.
+`useFetch` borrows React's machinery by calling `useState` and `useEffect`;
+it does not have any notification system of its own.
+
 **[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
 Compare this to the phase-06 version. Four state variables and a `useEffect`
 are replaced by one line: `useFetch<Exercise[]>(getExercises)`. No deps array
