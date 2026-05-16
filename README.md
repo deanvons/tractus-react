@@ -186,8 +186,12 @@ URL changes.
 
 **[`src/App.tsx`](src/App.tsx)**
 Compare this file to the phase-04 version. The `selectedExercise` state is gone.
-`App` no longer coordinates between `ExerciseList` and `ExerciseDetail` — the
-URL does that now. `App` defines the route map and that is its only job.
+`App` no longer coordinates between components — it declares a route map and
+nothing else. Two routes, two page components. That is its entire job.
+
+**[`src/pages/ExerciseListPage.tsx`](src/pages/ExerciseListPage.tsx)**
+A page component with no logic — it applies the layout and renders `ExerciseList`.
+Pages own the shell; components own the content.
 
 **[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx)**
 `onClick` is replaced by a `Link` to `/exercises/:id`. The component no longer
@@ -195,9 +199,13 @@ calls a callback — it navigates. The parent does not need to know a click
 happened.
 
 **[`src/pages/ExerciseDetailPage.tsx`](src/pages/ExerciseDetailPage.tsx)**
-`useParams` pulls the exercise ID out of the URL. The component fetches that
-specific exercise and manages its own loading and error states — the same
-pattern as `ExerciseList`, applied to a single resource.
+The page's only job is to read the URL param and pass the `id` to `ExerciseDetail`.
+No fetch, no state, no rendering logic — just bridging the URL to the component.
+
+**[`src/components/ExerciseDetail.tsx`](src/components/ExerciseDetail.tsx)**
+Receives `id` as a prop and owns everything else: fetching the exercise, managing
+loading and error states, rendering the card. The same fetch pattern as
+`ExerciseList`, applied to a single resource.
 
 **Component tree**
 
@@ -205,24 +213,29 @@ pattern as `ExerciseList`, applied to a single resource.
 graph TD
   BrowserRouter["BrowserRouter\n(main.tsx)"]
   App["App\n(route definitions)"]
-  ExList["ExerciseList\n(path='/')"]
+  ListPage["ExerciseListPage\n(path='/')"]
+  ExList["ExerciseList"]
   ELI1["ExerciseListItem"]
   ELI2["ExerciseListItem"]
   ELIn["…"]
   DetailPage["ExerciseDetailPage\n(path='/exercises/:id')"]
+  ExDetail["ExerciseDetail"]
 
   BrowserRouter --> App
-  App -->|"route '/'"| ExList
+  App -->|"route '/'"| ListPage
   App -->|"route '/exercises/:id'"| DetailPage
+  ListPage --> ExList
+  DetailPage -->|"id prop"| ExDetail
   ExList -->|"Link /exercises/:id"| ELI1
   ExList --> ELI2
   ExList --> ELIn
 ```
 
 The router sits above `App` in the tree. `App` no longer holds state — it holds
-routes. Each route renders a different subtree. Note: component diagrams
-conventionally show structure only. The route paths and Link labels are here
-because making the routing relationships explicit is the point of this phase.
+routes. Pages bridge the URL to components; components own the logic and markup.
+Note: component diagrams conventionally show structure only. The route paths and
+Link labels are here because making the routing relationships explicit is the
+point of this phase.
 
 ---
 
@@ -271,9 +284,9 @@ is selected" information live now? What are the tradeoffs of storing navigation
 state in the URL versus in a component?
 
 **Challenge 4 — Additive**
-Add a back button to `ExerciseDetailPage` that returns the user to the exercise
-list. Use `useNavigate` rather than a `Link`. When would you choose `useNavigate`
-over `Link`?
+Add a catch-all route to `App` that renders a simple "Page not found" message
+for any URL that does not match the defined routes. React Router has specific
+syntax for this — check the documentation.
 
 **Challenge 5 — Additive (stretch)**
 The exercise list has no indication of which item the user last visited. Add an
@@ -288,8 +301,8 @@ in the documentation.
 1. The exercise list loads every time the user navigates back to `/`. There is
    no memory of the previous fetch — the data is re-requested on every visit.
    When would that be the right behaviour, and when would it be wasteful?
-2. Both `ExerciseList` and `ExerciseDetailPage` now have their own loading and
-   error states. As more pages are added, this pattern will repeat. What would
+2. Both `ExerciseList` and `ExerciseDetail` now have their own loading and
+   error states. As more components are added, this pattern will repeat. What would
    it take to avoid writing the same loading and error logic every time?
 3. The app has exercises but no way to search or filter them. A user with a long
    exercise list has no choice but to scroll. What would a filter form need —
