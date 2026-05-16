@@ -1,21 +1,26 @@
 # Tractus Frontend
 
-> **Phase 06 — Forms** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 07 — Higher-Order Components** | Tractus Frontend · Web Dev Bootcamp
 
-The exercise list works, but it has no way to narrow down. A user with
-fifty exercises has no choice but to scroll through all of them. This phase
-adds a filter panel above the list — a text input for name and a dropdown
-for category. As the user types or selects, the list updates immediately.
+`ExerciseList` and `ExerciseDetail` both manage loading and error states.
+The code is nearly identical: an `isLoading` flag, an `error` string, a skeleton
+block, an error block, and finally the real content. Every new component that
+fetches data will write it again. This phase removes the duplication — not by
+refactoring, but by extracting the pattern into a higher-order component.
 
-The mechanism is the controlled input. React owns the value of every input
-in this phase — not the DOM. That single decision is what makes the
-filtered list update automatically on every keystroke, with no need to reach
-into the DOM to read what the user typed.
+A higher-order component is a function that takes a component and returns a new
+component. That is the entire mechanic. `withLoading` is one expression of it —
+the concern it wraps happens to be loading and error state. The same mechanic
+appears again in phase 09 as an auth guard, and it is the basis of many patterns
+in the React ecosystem: permission wrappers, analytics trackers, feature flags.
+The name changes. The shape does not.
 
-> **A note on scope.** This phase covers read-only filtering — inputs that
-> narrow an existing dataset. Form submission (POSTing new data to the API)
-> arrives in phase 10 with the session creation form, where we also introduce
-> React Hook Form for validation and submit handling.
+> **A note on scope.** HOCs are not the only way to share logic in React. Hooks
+> can extract stateful logic too, and are often the better tool. HOCs remain
+> relevant for wrapping rendering concerns — adding behaviour around what a
+> component displays, not just how it computes. We introduce HOCs here because
+> the auth guard in phase 09 is most naturally expressed as one. Custom hooks
+> will follow in a later phase.
 
 ---
 
@@ -23,7 +28,7 @@ into the DOM to read what the user typed.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why controlled inputs](#-why-controlled-inputs)
+- [Why higher-order components](#-why-higher-order-components)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
@@ -46,8 +51,8 @@ into the DOM to read what the user typed.
 | `phase-03_react_state-and-events` | `useState`, event handlers, local interactivity | Hardcoded data |
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
 | `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
-| `📌 phase-06_forms_controlled-inputs` | **Controlled inputs, filter form, derived state** | Live API data |
-| `phase-07_react_hoc-pattern` | Higher-order components, `withLoading` wrapper | Live API data |
+| `phase-06_forms_controlled-inputs` | Controlled inputs, filter form, derived state | Live API data |
+| `📌 phase-07_react_hoc-pattern` | **Higher-order components, `withLoading` wrapper** | Live API data |
 | `phase-08_auth_keycloak-pkce` | Keycloak, auth code + PKCE, login/logout | Auth wall |
 | `phase-09_auth_protected-routes` | HOC as auth guard, redirect to login, token header | Auth wall |
 | `phase-10_sessions_crud` | Create session, session list, session detail | Auth + API |
@@ -58,107 +63,111 @@ into the DOM to read what the user typed.
 
 ## ✅ Resolving the thought pieces
 
-### The exercise list loads every time the user navigates back to `/` — when is that right?
+### `ExerciseList` now manages fetch state, retry state, and filter state — what would you extract first?
 
-Still the case, and deliberately so. The filter resets on navigation too — a
-fresh visit to the list gives you the full unfiltered list. For an exercise
-catalogue that changes rarely, re-fetching every visit is wasteful but not
-broken. When the cost becomes visible — a slow network, a long list, a user
-who navigates back constantly — caching belongs to a data-fetching library.
-The friction will be clear enough when we reach it.
+The fetch and loading pattern. Filter state is specific to the list; the
+loading and error scaffolding is identical across every component that fetches
+data. That is what we extract here — not with a refactor inside each component,
+but with a wrapper that adds the behaviour from outside.
 
-### Both `ExerciseList` and `ExerciseDetail` have their own loading and error states — what would it take to avoid repeating that logic?
+### The loading and error pattern is identical across `ExerciseList` and `ExerciseDetail` — what is the minimal abstraction?
 
-Still deferred. This phase adds more state to `ExerciseList` and makes the
-duplication more obvious. That friction is the setup for phase 07, where a
-higher-order component extracts the shared pattern once and applies it to
-any component that fetches data.
+A higher-order component. `withLoading` wraps any component and handles the
+`isLoading` and `error` states on its behalf. The wrapped component receives
+its data as a prop and renders it — no loading logic, no error handling. The
+duplication disappears not by being rewritten but by being moved to one place.
 
-### The app has exercises but no way to search or filter them — what would a filter form need, and where would it live?
+### The filter works on data already in memory — when would client-side filtering be the wrong choice?
 
-We resolve it here. The filter needs two inputs — a text field for name and
-a dropdown for category — and their values need to be accessible wherever
-the filtering logic runs. Both live in `ExerciseList`, alongside the data
-they operate on.
+Still deferred — this is an API and backend design question more than a
+frontend one. When pagination is introduced, the server must filter before
+returning a page of results. The frontend change is small (add query params to
+the fetch call); the backend change is larger. That friction belongs to a phase
+where we are actively talking to a more capable API.
 
 ---
 
-## 💡 Why controlled inputs
+## 💡 Why higher-order components
 
-There are three approaches to forms in React, each a step further from the DOM.
+In JavaScript, functions are first-class values — they can be passed as
+arguments and returned as results. A higher-order component applies this
+to React components: it is a function that accepts a component as an argument
+and returns a new component as its result. The returned component renders the
+original, but with additional behaviour wrapped around it.
 
-**Uncontrolled inputs** let the DOM own the value. You read it with a ref
-(`inputRef.current.value`) when you need it — typically on submit. Simple to
-set up, but hard to compose: derived state requires querying the DOM on demand,
-and there is no automatic re-render when the value changes.
+This is not a React-specific idea. It is the same principle as a decorator, a
+middleware, or a wrapper function in any language. React makes it natural because
+components are just functions.
 
-**Controlled inputs** put the value in React state. The `value` prop sets what
-the input displays; `onChange` fires on every keystroke and keeps state in sync.
-Because the filter values are now just state variables, the filtered list is a
-derived computation — an `.filter()` call that runs on every render. No DOM
-reads, no side effects. This is what we build in this phase.
+The mechanic has exactly three parts:
 
-**Form libraries** (React Hook Form, for example) sit above both. They manage
-controlled inputs under the hood, add validation, track dirty and touched state,
-and hand you a clean form object on submit — without you wiring up `onChange`
-for every field. When a form grows beyond a few inputs, this is where the
-boilerplate becomes painful enough to justify the library. We will use React
-Hook Form when we build the session creation form in phase 10. By then, having
-written the wiring by hand, the library will make immediate sense.
+1. Accept a component as a parameter (by convention named `WrappedComponent`)
+2. Define a new component that adds the desired behaviour
+3. Return the new component
 
-This phase uses controlled inputs. The goal is to understand what the library
-is doing before we let it do it.
+`withLoading` uses this mechanic to handle loading and error states. It
+receives `isLoading`, `error`, and `data` as props, renders the appropriate
+UI for each case, and passes `data` to `WrappedComponent` only when it is
+ready. The wrapped component never sees `isLoading` or `error` — those are
+the HOC's concern.
+
+The same three-part mechanic, applied to a different concern, produces the
+auth guard in phase 09: accept a component, check whether the user is
+authenticated, redirect to login if not, render the component if so. The
+loading wrapper and the auth guard look different on the surface and identical
+underneath. That is the point.
 
 ---
 
 ## ⏮️ What we built in the previous branch
 
-Phase 05 added React Router. The app now has real URLs — `/` for the list
-and `/exercises/:id` for the detail view. Clicking an exercise navigates
-rather than selecting. The URL is the state. Page components bridge the URL
-to the components that own the logic.
+Phase 06 added a filter panel above the exercise list — a controlled text
+input and a category dropdown. Filter state lives in `ExerciseList` alongside
+the fetched data. The visible list is derived on every render. No new API
+calls — the filter narrows what is already in memory.
 
 ---
 
 ## 🎯 What we're doing in this branch
 
-- Add an `ExerciseFilter` component with a controlled text input and a controlled category dropdown
-- Filter state (`filterText`, `filterCategory`) lives in `ExerciseList` alongside the data it filters
-- Derive the visible list from the full exercise array and the current filter values on each render
-- Pass filter values and `onChange` handlers down to `ExerciseFilter` as props
+- Create `withLoading` — a higher-order component that handles `isLoading`, `error`, and the success case
+- Wrap `ExerciseList` with `withLoading` to remove its loading and error blocks
+- Wrap `ExerciseDetail` with `withLoading` to remove its loading and error blocks
+- Move the fetch call up to the page components so they can pass `isLoading`, `error`, and `data` as props
 
 ---
 
 ## 🏆 The abstraction we earned
 
-> Controlled inputs are not a React-specific idea — they are the general
-> principle of single source of truth applied to form fields. The DOM has
-> always had its own opinion about what an input contains; controlled inputs
-> override that opinion and hand authority to the application. Once the value
-> lives in state, everything that depends on it — validation, derived lists,
-> conditional UI — becomes a straightforward computation rather than a DOM
-> query. The cost is boilerplate: every input needs a `value` and an
-> `onChange`. That cost is why form libraries exist. By this point, having
-> written the wiring by hand, the library will make immediate sense.
+> Higher-order components are the first pattern in this course that operates
+> on components rather than on data. Every abstraction so far — service modules,
+> controlled inputs, derived state — has been about how data flows. HOCs are
+> about how components compose. A function that takes a component and returns a
+> component is a seam: you can insert behaviour into the rendering pipeline
+> without touching the component being wrapped. That seam is what makes the
+> auth guard in phase 09 possible. It is also what makes third-party HOCs —
+> Redux's `connect`, React Router's `withRouter` — work the way they do. Once
+> you understand the mechanic, you can read any HOC you encounter and know
+> exactly what it is doing.
 
 ---
 
 ## 🧑🏻‍🏫 Learning goals
 
 ### Understand
-- **Explain** the difference between a controlled and an uncontrolled input.
-- **Describe** what derived state is and why it does not need its own `useState`.
+- **Explain** what a higher-order component is — a function that takes a component and returns a component.
+- **Describe** how `withLoading` differs from a regular component and what problem it solves.
 
 ### Apply
-- **Wire up** a controlled input with `value` and `onChange`.
-- **Derive** a filtered list from state without storing the filtered result in state.
+- **Write** a higher-order component that wraps a component with additional behaviour.
+- **Use** `withLoading` to remove loading and error logic from a fetching component.
 
 ### Analyze
-- **Examine** where filter state lives and explain why that component is the right owner.
-- **Identify** when uncontrolled inputs are the better choice.
+- **Examine** the three-part HOC mechanic and identify it in both `withLoading` and the phase-09 auth guard.
+- **Compare** the HOC approach to extracting the same logic into a shared helper function — what can a HOC do that a helper cannot?
 
 ### Evaluate
-- **Assess** the tradeoff between controlled and uncontrolled inputs for different form scenarios.
+- **Assess** when a HOC is the right tool versus a custom hook — what is the difference in what each one wraps?
 
 ---
 
@@ -166,58 +175,66 @@ to the components that own the logic.
 
 | Concept | Plain English |
 |---|---|
-| **Controlled input** | An input whose value is set by a React state variable via the `value` prop. `onChange` keeps state in sync on every keystroke. React is the single source of truth. |
-| **Uncontrolled input** | An input whose value lives in the DOM. Read via a ref when needed — not on every keystroke. Simpler to set up; harder to compose. |
-| **`onChange`** | The event handler fired on every input change. Receives a `SyntheticEvent`; read the current value from `event.target.value`. |
-| **Derived state** | A value computed from existing state on each render. The filtered exercise list is derived — it does not need its own `useState`, just a `.filter()` call before the return. |
-| **`select` element** | The HTML dropdown. Works like a controlled input — give it a `value` and an `onChange`, and React owns the selection. |
+| **Higher-order component (HOC)** | A function that takes a component and returns a new component. The returned component adds behaviour — loading states, auth checks, analytics — around the original. |
+| **`WrappedComponent`** | The component passed into the HOC. The HOC renders it when the conditions are right (data is ready, user is authenticated, etc.). |
+| **Rendering concern** | Behaviour that affects what is displayed — loading skeletons, error messages, redirect to login. HOCs are well suited to wrapping these. Compare to stateful logic (data fetching, form state), which is better extracted into a custom hook. |
+| **Composition** | Building complex behaviour by combining simpler pieces. HOCs compose components the same way functions compose — the output of one can be the input of another. |
 
 ---
 
 ## 🔍 What to notice in the code
 
-**[`src/components/ExerciseFilter.tsx`](src/components/ExerciseFilter.tsx)**
-A presentational component — no state of its own. It receives the current filter
-values and the `onChange` handlers as props and renders two inputs. The parent
-owns the state; this component only renders the controls and reports changes.
+**[`src/hocs/withLoading.tsx`](src/hocs/withLoading.tsx)**
+The entire HOC mechanic is visible here: a function that accepts a component,
+defines a new component around it, and returns the new component. Read the
+three parts explicitly — parameter, inner component, return statement.
+Compare the shape of this file to the auth guard that appears in phase 09.
+
+**[`src/pages/ExerciseListPage.tsx`](src/pages/ExerciseListPage.tsx)**
+The fetch call has moved here from `ExerciseList`. The page now owns the
+data lifecycle — it passes `isLoading`, `error`, and `exercises` as props
+to the wrapped component. `ExerciseList` no longer knows whether data is
+loading; it only knows how to render exercises it has been given.
+
+**[`src/pages/ExerciseDetailPage.tsx`](src/pages/ExerciseDetailPage.tsx)**
+Same pattern as `ExerciseListPage` — fetch logic moved to the page, the
+detail component receives ready data as a prop.
 
 **[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
-Filter state sits here alongside the fetched data, because this is where both
-are needed to compute what gets rendered. Before mapping over exercises, a
-`.filter()` call derives the visible subset. No new `useState` for the filtered
-list — it is computed fresh on every render from the values that are already
-in state.
+Compare this file to the phase-06 version. The `isLoading`, `error`, and
+`retryCount` state are gone. The skeleton and error blocks are gone. The
+component receives `exercises` as a prop and renders them — nothing else.
+
+**[`src/components/ExerciseDetail.tsx`](src/components/ExerciseDetail.tsx)**
+Same transformation — loading and error state removed, data received as a prop.
 
 **Component tree**
 
 ```mermaid
 graph TD
   App["App\n(route definitions)"]
-  ListPage["ExerciseListPage\n(path='/')"]
-  ExList["ExerciseList\n(owns filter state + data)"]
-  ExFilter["ExerciseFilter\n(controlled inputs)"]
-  ELI1["ExerciseListItem"]
-  ELI2["ExerciseListItem"]
-  ELIn["…"]
-  DetailPage["ExerciseDetailPage\n(path='/exercises/:id')"]
-  ExDetail["ExerciseDetail"]
-  NotFound["NotFoundPage\n(path='*')"]
+  ListPage["ExerciseListPage\n(fetch + isLoading + error)"]
+  WLList["withLoading(ExerciseList)"]
+  ExList["ExerciseList\n(renders exercises prop)"]
+  ExFilter["ExerciseFilter"]
+  ELIn["ExerciseListItem ×n"]
+  DetailPage["ExerciseDetailPage\n(fetch + isLoading + error)"]
+  WLDetail["withLoading(ExerciseDetail)"]
+  ExDetail["ExerciseDetail\n(renders exercise prop)"]
 
   App -->|"route '/'"| ListPage
   App -->|"route '/exercises/:id'"| DetailPage
-  App -->|"route '*'"| NotFound
-  ListPage --> ExList
-  ExList -->|"filterText, filterCategory\nonChange handlers"| ExFilter
-  ExList --> ELI1
-  ExList --> ELI2
+  ListPage -->|"isLoading, error, data"| WLList
+  WLList -->|"exercises prop"| ExList
+  ExList --> ExFilter
   ExList --> ELIn
-  DetailPage -->|"id prop"| ExDetail
+  DetailPage -->|"isLoading, error, data"| WLDetail
+  WLDetail -->|"exercise prop"| ExDetail
 ```
 
-`ExerciseList` is the container — it holds state and passes it down.
-`ExerciseFilter` is presentational — it renders inputs and reports changes
-upward via callbacks. The same container/presentational split introduced in
-phase 02 applied to a form.
+The page owns the lifecycle. The HOC owns the conditional rendering. The
+component owns nothing but its own output. Three distinct responsibilities,
+three distinct layers.
 
 ---
 
@@ -237,52 +254,46 @@ App runs at `http://localhost:5173`.
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-The filter resets every time the user navigates away and returns. Why?
-What would need to change to preserve the filter across navigation?
-Would you store the filter in component state, the URL, or somewhere else?
+`withLoading` is described as wrapping a "rendering concern". What is the
+difference between a rendering concern and a stateful concern? Give an example
+of each and explain why that distinction matters when choosing between a HOC
+and a custom hook.
 
 **Challenge 2 — Analytical**
-The text filter matches on `exercise.name`. What other fields would be
-useful to search across, and what are the tradeoffs of matching on multiple
-fields simultaneously?
+HOCs can be composed — `withAuth(withLoading(MyComponent))`. What would the
+execution order be, and what would happen if the order were reversed?
+When does composition order matter?
 
 **Challenge 3 — Additive**
-Add a clear button that resets both inputs to their default values with a
-single click.
+`withLoading` currently shows a generic skeleton. Extend it to accept an
+optional `skeleton` prop so the caller can pass a custom loading UI.
+When would a generic skeleton be insufficient?
 
 **Challenge 4 — Additive**
-Add a result count below the filter that shows "Showing X of Y exercises".
-Where does this value come from — does it need its own state, or is it
-already available?
+Add a `displayName` to the component returned by `withLoading` so it appears
+as `withLoading(ExerciseList)` in React DevTools rather than just `Component`.
+Why does this matter in practice?
 
 **Challenge 5 — Additive (stretch)**
-The text input has no associated `<label>` element — only a placeholder.
-Add a proper label and wire it to the input with `htmlFor` and `id`.
-Why does this matter beyond visual styling?
+Write a second HOC — `withErrorBoundary` — that catches rendering errors in
+its wrapped component and displays a fallback UI instead of crashing the page.
+React provides a specific API for this — find it in the documentation.
 
 ---
 
 ## 💭 Thought pieces for the next branch
 
-1. `ExerciseList` now manages fetch state, retry state, and filter state.
-   As more behaviour is added, a component that does this much becomes hard
-   to read and test. What would you extract first, and how?
-2. The loading and error pattern in `ExerciseList` and `ExerciseDetail` is
-   identical — `isLoading`, `error`, the same conditional returns. Every new
-   component that fetches data will repeat it. What is the minimal abstraction
-   that removes the duplication without hiding what is happening?
-3. The filter works on data already in memory — all exercises were fetched
-   upfront and the filter narrows that set client-side. The alternative is to
-   pass filter values as query parameters to the API (`GET /exercises?name=squat`)
-   and let the server return only the matching records. When would client-side
-   filtering be the wrong choice, and what would the frontend need to change to
-   support server-side filtering instead?
-4. The filter triggers a re-render on every keystroke. For a slow operation or
-   a very large list, debouncing — delaying the computation until the user has
-   stopped typing — is the standard fix. What React primitive would you use to
-   implement it, and when is the cost actually worth paying?
+1. The app currently has no login. Any user can reach any route. What would
+   need to exist — in the frontend, in the API, and in an auth server — before
+   you could restrict a route to authenticated users only?
+2. Tokens carry identity. Where would a token live in a browser application,
+   and why does the answer matter for security? What are the tradeoffs between
+   storing it in memory, in `localStorage`, and in a cookie?
+3. The HOC pattern keeps growing useful as the app gains features. What other
+   cross-cutting concerns in this app — things that are not specific to exercises
+   or sessions — might eventually be expressed as HOCs?
 
 ---
 
-*Previous branch: [`phase-05_routing_react-router`]*
-*Next branch: [`phase-07_react_hoc-pattern`]*
+*Previous branch: [`phase-06_forms_controlled-inputs`]*
+*Next branch: [`phase-08_auth_keycloak-pkce`]*
