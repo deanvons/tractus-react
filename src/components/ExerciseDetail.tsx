@@ -1,17 +1,13 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Exercise } from '../types/exercise'
 import { getExercise } from '../services/exerciseService'
+import useFetch from '../hooks/useFetch'
 
 /*
- * ExerciseDetail receives an id prop — not a full exercise object and not a
- * URL param. The page reads the URL; this component handles what to do with
- * the id: fetch the exercise, manage loading and error states, render the card.
- * Keeping that logic here means ExerciseDetailPage stays a thin routing shell.
- *
- * The fetch pattern here is identical to ExerciseList — same loading state,
- * same error state, same useEffect dependency. In phase 07 we will extract
- * the shared pattern with a higher-order component so we stop rewriting it.
+ * ExerciseDetail receives an id prop — the page reads the URL, this component
+ * handles what to do with it. The fetch wiring that was here before is now
+ * one useFetch call. The deps array [id] tells the hook to re-fetch whenever
+ * the id changes — the same contract as useEffect's dependency array.
  */
 interface Props {
   id: string
@@ -19,21 +15,10 @@ interface Props {
 
 function ExerciseDetail({ id }: Props) {
   const navigate = useNavigate()
-  const [exercise, setExercise] = useState<Exercise | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    getExercise(id)
-      .then((data) => {
-        setExercise(data)
-        setIsLoading(false)
-      })
-      .catch((err: Error) => {
-        setError(err.message)
-        setIsLoading(false)
-      })
-  }, [id])
+  const { data: exercise, isLoading, error } = useFetch<Exercise>(
+    () => getExercise(id),
+    [id]
+  )
 
   if (isLoading) {
     return (
