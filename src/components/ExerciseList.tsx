@@ -1,43 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Exercise } from '../types/exercise'
 import ExerciseListItem from './ExerciseListItem'
 import ExerciseFilter from './ExerciseFilter'
 import { getExercises } from '../services/exerciseService'
+import useFetch from '../hooks/useFetch'
 
 /*
- * ExerciseList owns both the fetched data and the filter state — they live
- * together because both are needed to compute what gets rendered. The filtered
- * list is not stored in state: it is derived fresh on every render from the
- * full exercises array and the current filter values. Storing it separately
- * would mean keeping two pieces of state in sync, which is a source of bugs.
- *
- * categories is also derived — unique values extracted from the fetched data
- * so the dropdown always reflects what the API actually returns.
+ * The fetch wiring — useState for data/isLoading/error, the useEffect, the
+ * retry mechanism — is gone. useFetch handles all of it. What remains is what
+ * belongs here: the filter state that is specific to this component, and the
+ * derived computations that depend on both the data and the filter values.
  */
 function ExerciseList() {
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
+  const { data: exercises, isLoading, error } = useFetch<Exercise[]>(getExercises)
   const [filterText, setFilterText] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
 
-  useEffect(() => {
-    getExercises()
-      .then((data) => {
-        setExercises(data)
-        setIsLoading(false)
-      })
-      .catch((err: Error) => {
-        setError(err.message)
-        setIsLoading(false)
-      })
-  }, [retryCount])
-
-  function handleRetry() {
-    setIsLoading(true)
-    setError(null)
-    setRetryCount((c) => c + 1)
+  function handleClear() {
+    setFilterText('')
+    setFilterCategory('')
   }
 
   if (isLoading) {
@@ -54,28 +35,16 @@ function ExerciseList() {
   }
 
   if (error) {
-    return (
-      <div>
-        <p className="text-red-500 mb-3">Failed to load exercises: {error}</p>
-        <button className="text-sm text-blue-600 underline" onClick={handleRetry}>
-          Retry
-        </button>
-      </div>
-    )
+    return <p className="text-red-500">Failed to load exercises: {error}</p>
   }
 
-  const categories = [...new Set(exercises.map((ex) => ex.category))].sort()
-
-  const filteredExercises = exercises.filter((ex) => {
+  const list = exercises ?? []
+  const categories = [...new Set(list.map((ex) => ex.category))].sort()
+  const filteredExercises = list.filter((ex) => {
     const matchesText = ex.name.toLowerCase().includes(filterText.toLowerCase())
     const matchesCategory = filterCategory === '' || ex.category === filterCategory
     return matchesText && matchesCategory
   })
-
-  function handleClear() {
-    setFilterText('')
-    setFilterCategory('')
-  }
 
   return (
     <>
@@ -88,7 +57,7 @@ function ExerciseList() {
         onClear={handleClear}
       />
       <p className="text-xs text-gray-400 mb-4">
-        Showing {filteredExercises.length} of {exercises.length} exercises
+        Showing {filteredExercises.length} of {list.length} exercises
       </p>
       <ul className="flex flex-col gap-4">
         {filteredExercises.map((exercise) => (
