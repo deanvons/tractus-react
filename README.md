@@ -199,19 +199,35 @@ list is derived on every render without being stored in separate state.
 **[`src/hooks/useFetch.ts`](src/hooks/useFetch.ts)**
 Read this file in three parts: the `useState` calls that define the slots, the
 `useEffect` that runs the fetch and writes to those slots, and the return value
-that hands the current slot values back to the caller. There is no special
-mechanism — it is the same code that was inside each component, moved into a
-named function. The `use` prefix is the only thing that makes it a hook.
+that hands those slot values back to the caller. There is no special mechanism —
+it is the same code that was inside each component, moved into a named function.
+
+The hook accepts two arguments: a fetch function and a deps array. The deps
+array works exactly like `useEffect`'s second argument — it tells the hook when
+to re-run. The fetch function itself is intentionally excluded from the effect's
+dependency array. An inline arrow function like `() => getExercise(id)` is a new
+reference on every render; including it would trigger infinite re-fetching. The
+`eslint-disable` comment on that line is deliberate — it signals that the
+trade-off is understood, not overlooked.
 
 **[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
-Compare this to the phase-06 version. The `useState` calls for `isLoading`,
-`error`, and the fetch data are gone, replaced by a single `useFetch` call.
-The filter state remains — it belongs to this component and is not shared.
+Compare this to the phase-06 version. Four state variables and a `useEffect`
+are replaced by one line: `useFetch<Exercise[]>(getExercises)`. No deps array
+is needed here because `getExercises` is a module-level function — a stable
+reference that never changes between renders. Notice `exercises ?? []` before
+the filter logic: `data` starts as `null` before the fetch resolves, so the
+fallback prevents a crash when deriving categories and filtered results.
+The filter state and `handleClear` remain — they belong to this component
+and are not shared with anything else.
 
 **[`src/components/ExerciseDetail.tsx`](src/components/ExerciseDetail.tsx)**
-The same transformation — three state variables and a `useEffect` replaced by
-one hook call. The rendering is identical to phase-06; only the source of the
-data changed.
+Compare this to the phase-06 version. The same transformation, but the call
+site looks different: `useFetch<Exercise>(() => getExercise(id), [id])`. An
+inline arrow function is needed because the fetch depends on `id`, which
+changes when the user navigates between exercises. The deps array `[id]` tells
+the hook to re-run whenever `id` changes — the same contract as passing `[id]`
+to `useEffect` directly. The retry button from phase-04 is intentionally absent
+— adding it back through the hook is challenge 3.
 
 **Component tree**
 
