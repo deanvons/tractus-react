@@ -198,7 +198,7 @@ phase-[NN]_[topic]_[implementation-detail]
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
 | `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
 | `phase-06_forms_controlled-inputs` | Controlled inputs, filter form, form submission | Live API data |
-| `phase-07_react_hoc-pattern` | Higher-order components, `withLoading` wrapper | Live API data |
+| `phase-07_react_custom-hooks` | Custom hooks, `useFetch`, extracting stateful logic | Live API data |
 | `phase-08_auth_keycloak-pkce` | Keycloak, auth code + PKCE, login/logout | Auth wall |
 | `phase-09_auth_protected-routes` | HOC as auth guard, redirect to login, token header | Auth wall |
 | `phase-10_sessions_crud` | Create session, session list, session detail | Auth + API |

@@ -1,26 +1,30 @@
 # Tractus Frontend
 
-> **Phase 07 — Higher-Order Components** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 07 — Custom Hooks** | Tractus Frontend · Web Dev Bootcamp
 
-`ExerciseList` and `ExerciseDetail` both manage loading and error states.
-The code is nearly identical: an `isLoading` flag, an `error` string, a skeleton
-block, an error block, and finally the real content. Every new component that
-fetches data will write it again. This phase removes the duplication — not by
-refactoring, but by extracting the pattern into a higher-order component.
+`ExerciseList` and `ExerciseDetail` both manage loading and error states with
+nearly identical code. The obvious fix was a higher-order component — a
+`withLoading` wrapper that handles the conditional rendering so neither
+component has to. We considered it, and rejected it. A HOC wraps rendering;
+loading state is a stateful concern. Forcing the fetch logic up into page
+components to feed a HOC would break the convention we established in phase 05:
+page components are thin routing shells, not data containers. The HOC would
+work, but the architecture around it would be wrong.
 
-A higher-order component is a function that takes a component and returns a new
-component. That is the entire mechanic. `withLoading` is one expression of it —
-the concern it wraps happens to be loading and error state. The same mechanic
-appears again in phase 09 as an auth guard, and it is the basis of many patterns
-in the React ecosystem: permission wrappers, analytics trackers, feature flags.
-The name changes. The shape does not.
+The right tool for extracting stateful logic is a custom hook. A custom hook
+is a plain JavaScript function that calls React's built-in hooks internally
+and returns whatever the calling component needs. It shares logic, not
+rendering. The component stays in control of what it displays; the hook
+handles the wiring it would otherwise repeat.
 
-> **A note on scope.** HOCs are not the only way to share logic in React. Hooks
-> can extract stateful logic too, and are often the better tool. HOCs remain
-> relevant for wrapping rendering concerns — adding behaviour around what a
-> component displays, not just how it computes. We introduce HOCs here because
-> the auth guard in phase 09 is most naturally expressed as one. Custom hooks
-> will follow in a later phase.
+> **A note on scope.** Custom hooks are an intermediate-to-advanced topic.
+> You are not expected to write them fluently after one phase — they are
+> something you grow into over time as your intuition for hook behaviour
+> deepens. This phase is an opportunity to see how hooks work from the inside.
+> Writing one yourself is one of the clearest ways to understand what React is
+> doing when you call `useState` or `useEffect` — and why the rules exist.
+> HOCs are still a real pattern and will return in phase 09 as an auth guard,
+> where wrapping rendering is genuinely the right fit.
 
 ---
 
@@ -28,7 +32,7 @@ The name changes. The shape does not.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why higher-order components](#-why-higher-order-components)
+- [Why custom hooks over a HOC](#-why-custom-hooks-over-a-hoc)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
@@ -52,7 +56,7 @@ The name changes. The shape does not.
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
 | `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
 | `phase-06_forms_controlled-inputs` | Controlled inputs, filter form, derived state | Live API data |
-| `📌 phase-07_react_hoc-pattern` | **Higher-order components, `withLoading` wrapper** | Live API data |
+| `📌 phase-07_react_custom-hooks` | **Custom hooks, `useFetch`, extracting stateful logic** | Live API data |
 | `phase-08_auth_keycloak-pkce` | Keycloak, auth code + PKCE, login/logout | Auth wall |
 | `phase-09_auth_protected-routes` | HOC as auth guard, redirect to login, token header | Auth wall |
 | `phase-10_sessions_crud` | Create session, session list, session detail | Auth + API |
@@ -65,109 +69,116 @@ The name changes. The shape does not.
 
 ### `ExerciseList` now manages fetch state, retry state, and filter state — what would you extract first?
 
-The fetch and loading pattern. Filter state is specific to the list; the
-loading and error scaffolding is identical across every component that fetches
-data. That is what we extract here — not with a refactor inside each component,
-but with a wrapper that adds the behaviour from outside.
+The fetch and loading pattern — `isLoading`, `error`, the `useEffect` that
+runs the request. Filter state is specific to `ExerciseList`; loading state
+repeats across every component that fetches data. That is what we extract,
+and we do it with a custom hook rather than a HOC. The distinction matters
+and is explained in the next section.
 
 ### The loading and error pattern is identical across `ExerciseList` and `ExerciseDetail` — what is the minimal abstraction?
 
-A higher-order component. `withLoading` wraps any component and handles the
-`isLoading` and `error` states on its behalf. The wrapped component receives
-its data as a prop and renders it — no loading logic, no error handling. The
-duplication disappears not by being rewritten but by being moved to one place.
+`useFetch`. A custom hook that takes a fetch function, runs it inside a
+`useEffect`, and returns `{ data, isLoading, error }`. The calling component
+destructures what it needs and uses the values directly — same as if it had
+written the state itself, but without repeating the wiring.
 
 ### The filter works on data already in memory — when would client-side filtering be the wrong choice?
 
-Still deferred — this is an API and backend design question more than a
-frontend one. When pagination is introduced, the server must filter before
-returning a page of results. The frontend change is small (add query params to
-the fetch call); the backend change is larger. That friction belongs to a phase
-where we are actively talking to a more capable API.
+Still deferred. This is an API design question as much as a frontend one.
+When the exercise list grows large enough that fetching everything upfront is
+wasteful, the filter should pass query parameters to the API and let the server
+return only matching records. The frontend change is small — add params to the
+fetch call. The backend change is larger. That friction belongs to a phase where
+we are actively building against a more capable API endpoint.
 
 ---
 
-## 💡 Why higher-order components
+## 💡 Why custom hooks over a HOC
 
-In JavaScript, functions are first-class values — they can be passed as
-arguments and returned as results. A higher-order component applies this
-to React components: it is a function that accepts a component as an argument
-and returns a new component as its result. The returned component renders the
-original, but with additional behaviour wrapped around it.
+The repeated pattern in `ExerciseList` and `ExerciseDetail` is stateful logic:
+`useState` for `isLoading`, `error`, and the fetched data; a `useEffect` that
+runs the request and updates those values. A higher-order component could wrap
+the conditional rendering — showing a skeleton or error message instead of the
+component — but it cannot reach inside the component and remove the state that
+drives those conditions. To make a HOC work cleanly, the fetch logic would have
+to move up into the page components so they could pass `isLoading` and `error`
+as props down through the HOC layer. Page components would become data containers.
+That breaks the convention established in phase 05, and the cure would be worse
+than the disease.
 
-This is not a React-specific idea. It is the same principle as a decorator, a
-middleware, or a wrapper function in any language. React makes it natural because
-components are just functions.
+A custom hook solves the actual problem. It extracts the stateful logic —
+the `useState` calls, the `useEffect`, the fetch — into a reusable function.
+The component calls the hook and gets back `{ data, isLoading, error }`. Nothing
+moves. The page components stay thin. The component stays in control of its own
+rendering. The duplication disappears because the logic is in one place.
 
-The mechanic has exactly three parts:
+The `use` prefix is the signal that makes this work. When a function's name
+starts with `use`, React treats it as a hook: it enforces the rules of hooks
+inside it (no conditional calls, no calls inside loops), and the linter warns
+if those rules are broken. Without the prefix, the same function is just a plain
+JavaScript function — it may work in simple cases, but React will not protect
+you when you use it incorrectly. The prefix is what opts the function into
+hook semantics. It is a convention, not syntax — React looks for it by name.
 
-1. Accept a component as a parameter (by convention named `WrappedComponent`)
-2. Define a new component that adds the desired behaviour
-3. Return the new component
-
-`withLoading` uses this mechanic to handle loading and error states. It
-receives `isLoading`, `error`, and `data` as props, renders the appropriate
-UI for each case, and passes `data` to `WrappedComponent` only when it is
-ready. The wrapped component never sees `isLoading` or `error` — those are
-the HOC's concern.
-
-The same three-part mechanic, applied to a different concern, produces the
-auth guard in phase 09: accept a component, check whether the user is
-authenticated, redirect to login if not, render the component if so. The
-loading wrapper and the auth guard look different on the surface and identical
-underneath. That is the point.
+Under the hood, a custom hook is nothing more than a function that calls other
+hooks. When `useFetch` calls `useState`, React stores that state in the same
+fiber slot system it uses for every other hook call — keyed to the component
+instance and the call order. The state does not live inside the hook function.
+It lives in React's internal tree. The hook is just the function that reads from
+and writes to that slot. This is why custom hooks can hold state that survives
+re-renders, even though the function itself runs fresh each time.
 
 ---
 
 ## ⏮️ What we built in the previous branch
 
-Phase 06 added a filter panel above the exercise list — a controlled text
-input and a category dropdown. Filter state lives in `ExerciseList` alongside
-the fetched data. The visible list is derived on every render. No new API
-calls — the filter narrows what is already in memory.
+Phase 06 added a filter panel to the exercise list — a controlled text input
+and a category dropdown that narrow the visible exercises on every keystroke.
+Filter state lives in `ExerciseList` alongside the fetched data. The visible
+list is derived on every render without being stored in separate state.
 
 ---
 
 ## 🎯 What we're doing in this branch
 
-- Create `withLoading` — a higher-order component that handles `isLoading`, `error`, and the success case
-- Wrap `ExerciseList` with `withLoading` to remove its loading and error blocks
-- Wrap `ExerciseDetail` with `withLoading` to remove its loading and error blocks
-- Move the fetch call up to the page components so they can pass `isLoading`, `error`, and `data` as props
+- Write `useFetch` — a custom hook that takes a fetch function, manages `isLoading` and `error` state, and returns `{ data, isLoading, error }`
+- Replace the fetch wiring in `ExerciseList` with a `useFetch` call
+- Replace the fetch wiring in `ExerciseDetail` with a `useFetch` call
+- Each component receives the same values it had before — nothing changes about what they render, only where the state comes from
 
 ---
 
 ## 🏆 The abstraction we earned
 
-> Higher-order components are the first pattern in this course that operates
-> on components rather than on data. Every abstraction so far — service modules,
-> controlled inputs, derived state — has been about how data flows. HOCs are
-> about how components compose. A function that takes a component and returns a
-> component is a seam: you can insert behaviour into the rendering pipeline
-> without touching the component being wrapped. That seam is what makes the
-> auth guard in phase 09 possible. It is also what makes third-party HOCs —
-> Redux's `connect`, React Router's `withRouter` — work the way they do. Once
-> you understand the mechanic, you can read any HOC you encounter and know
-> exactly what it is doing.
+> Custom hooks are the idiomatic React answer to shared stateful logic. Every
+> built-in hook — `useState`, `useEffect`, `useRef` — is itself just a function
+> that reads from and writes to React's internal state tree. A custom hook
+> composes those primitives into something reusable and named. The `use` prefix
+> is the only thing that distinguishes a custom hook from a plain function, and
+> that distinction is purely about enforcing the rules — not about any special
+> runtime behaviour. Once that is clear, the pattern generalises immediately:
+> any logic that involves hooks and repeats across components is a candidate
+> for extraction. `useFetch` is the first. `useAuth` and `useSession` will
+> follow in later phases.
 
 ---
 
 ## 🧑🏻‍🏫 Learning goals
 
 ### Understand
-- **Explain** what a higher-order component is — a function that takes a component and returns a component.
-- **Describe** how `withLoading` differs from a regular component and what problem it solves.
+- **Explain** what a custom hook is and what the `use` prefix signals to React.
+- **Describe** why the `use` prefix is a convention and not special syntax, and what React uses it for.
 
 ### Apply
-- **Write** a higher-order component that wraps a component with additional behaviour.
-- **Use** `withLoading` to remove loading and error logic from a fetching component.
+- **Write** a custom hook that composes `useState` and `useEffect` into a reusable fetch function.
+- **Replace** repeated stateful logic in two components with a single hook call.
 
 ### Analyze
-- **Examine** the three-part HOC mechanic and identify it in both `withLoading` and the phase-09 auth guard.
-- **Compare** the HOC approach to extracting the same logic into a shared helper function — what can a HOC do that a helper cannot?
+- **Examine** where state actually lives when a custom hook calls `useState` — is it inside the hook or inside the component?
+- **Compare** a custom hook and a higher-order component — what does each one extract, and what does each one leave in place?
 
 ### Evaluate
-- **Assess** when a HOC is the right tool versus a custom hook — what is the difference in what each one wraps?
+- **Assess** when extracting logic into a custom hook is worth the indirection — what signals that logic is ready to be extracted?
 
 ---
 
@@ -175,66 +186,58 @@ calls — the filter narrows what is already in memory.
 
 | Concept | Plain English |
 |---|---|
-| **Higher-order component (HOC)** | A function that takes a component and returns a new component. The returned component adds behaviour — loading states, auth checks, analytics — around the original. |
-| **`WrappedComponent`** | The component passed into the HOC. The HOC renders it when the conditions are right (data is ready, user is authenticated, etc.). |
-| **Rendering concern** | Behaviour that affects what is displayed — loading skeletons, error messages, redirect to login. HOCs are well suited to wrapping these. Compare to stateful logic (data fetching, form state), which is better extracted into a custom hook. |
-| **Composition** | Building complex behaviour by combining simpler pieces. HOCs compose components the same way functions compose — the output of one can be the input of another. |
+| **Custom hook** | A plain JavaScript function whose name starts with `use` and that calls React hooks internally. It extracts stateful logic so components do not repeat it. |
+| **`use` prefix** | The naming convention that tells React (and its linter) to enforce hook rules inside the function. Without it, the same code is just a function — React will not warn you if you misuse it. |
+| **Stateful logic** | Logic that involves state — `useState`, `useEffect`, derived values from state. Custom hooks extract this. Compare to rendering logic (what is displayed), which HOCs wrap. |
+| **Hook slot** | React's internal storage for a hook's state, keyed to the component instance and the order of hook calls. The state lives here — not inside the hook function itself. |
+| **Composition** | Building a custom hook by combining built-in hooks. `useFetch` composes `useState` and `useEffect`. More complex hooks compose other custom hooks. |
 
 ---
 
 ## 🔍 What to notice in the code
 
-**[`src/hocs/withLoading.tsx`](src/hocs/withLoading.tsx)**
-The entire HOC mechanic is visible here: a function that accepts a component,
-defines a new component around it, and returns the new component. Read the
-three parts explicitly — parameter, inner component, return statement.
-Compare the shape of this file to the auth guard that appears in phase 09.
-
-**[`src/pages/ExerciseListPage.tsx`](src/pages/ExerciseListPage.tsx)**
-The fetch call has moved here from `ExerciseList`. The page now owns the
-data lifecycle — it passes `isLoading`, `error`, and `exercises` as props
-to the wrapped component. `ExerciseList` no longer knows whether data is
-loading; it only knows how to render exercises it has been given.
-
-**[`src/pages/ExerciseDetailPage.tsx`](src/pages/ExerciseDetailPage.tsx)**
-Same pattern as `ExerciseListPage` — fetch logic moved to the page, the
-detail component receives ready data as a prop.
+**[`src/hooks/useFetch.ts`](src/hooks/useFetch.ts)**
+Read this file in three parts: the `useState` calls that define the slots, the
+`useEffect` that runs the fetch and writes to those slots, and the return value
+that hands the current slot values back to the caller. There is no special
+mechanism — it is the same code that was inside each component, moved into a
+named function. The `use` prefix is the only thing that makes it a hook.
 
 **[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
-Compare this file to the phase-06 version. The `isLoading`, `error`, and
-`retryCount` state are gone. The skeleton and error blocks are gone. The
-component receives `exercises` as a prop and renders them — nothing else.
+Compare this to the phase-06 version. The `useState` calls for `isLoading`,
+`error`, and the fetch data are gone, replaced by a single `useFetch` call.
+The filter state remains — it belongs to this component and is not shared.
 
 **[`src/components/ExerciseDetail.tsx`](src/components/ExerciseDetail.tsx)**
-Same transformation — loading and error state removed, data received as a prop.
+The same transformation — three state variables and a `useEffect` replaced by
+one hook call. The rendering is identical to phase-06; only the source of the
+data changed.
 
 **Component tree**
 
 ```mermaid
 graph TD
   App["App\n(route definitions)"]
-  ListPage["ExerciseListPage\n(fetch + isLoading + error)"]
-  WLList["withLoading(ExerciseList)"]
-  ExList["ExerciseList\n(renders exercises prop)"]
-  ExFilter["ExerciseFilter"]
+  ListPage["ExerciseListPage\n(path='/')"]
+  ExList["ExerciseList\n(useFetch + filter state)"]
+  ExFilter["ExerciseFilter\n(controlled inputs)"]
   ELIn["ExerciseListItem ×n"]
-  DetailPage["ExerciseDetailPage\n(fetch + isLoading + error)"]
-  WLDetail["withLoading(ExerciseDetail)"]
-  ExDetail["ExerciseDetail\n(renders exercise prop)"]
+  DetailPage["ExerciseDetailPage\n(path='/exercises/:id')"]
+  ExDetail["ExerciseDetail\n(useFetch)"]
+  NotFound["NotFoundPage\n(path='*')"]
 
   App -->|"route '/'"| ListPage
   App -->|"route '/exercises/:id'"| DetailPage
-  ListPage -->|"isLoading, error, data"| WLList
-  WLList -->|"exercises prop"| ExList
+  App -->|"route '*'"| NotFound
+  ListPage --> ExList
   ExList --> ExFilter
   ExList --> ELIn
-  DetailPage -->|"isLoading, error, data"| WLDetail
-  WLDetail -->|"exercise prop"| ExDetail
+  DetailPage -->|"id prop"| ExDetail
 ```
 
-The page owns the lifecycle. The HOC owns the conditional rendering. The
-component owns nothing but its own output. Three distinct responsibilities,
-three distinct layers.
+The component tree is unchanged from phase 06. Custom hooks are invisible in
+the tree — they are not components, they leave no node. The change is entirely
+inside `ExerciseList` and `ExerciseDetail`.
 
 ---
 
@@ -254,30 +257,31 @@ App runs at `http://localhost:5173`.
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-`withLoading` is described as wrapping a "rendering concern". What is the
-difference between a rendering concern and a stateful concern? Give an example
-of each and explain why that distinction matters when choosing between a HOC
-and a custom hook.
+`useFetch` calls `useState` inside it. Where does that state actually live —
+inside the hook function, or somewhere else? What does your answer tell you
+about why custom hooks can hold state across re-renders even though the function
+runs fresh each time?
 
 **Challenge 2 — Analytical**
-HOCs can be composed — `withAuth(withLoading(MyComponent))`. What would the
-execution order be, and what would happen if the order were reversed?
-When does composition order matter?
+`ExerciseList` still manages its own filter state — that was not moved into
+`useFetch`. Why not? What is the difference between the fetch logic that was
+extracted and the filter logic that was not?
 
 **Challenge 3 — Additive**
-`withLoading` currently shows a generic skeleton. Extend it to accept an
-optional `skeleton` prop so the caller can pass a custom loading UI.
-When would a generic skeleton be insufficient?
+`useFetch` currently has no way to retry a failed request. Add a `retry`
+function to its return value that re-runs the fetch. How does this compare
+to the `retryCount` pattern used before `useFetch` existed?
 
-**Challenge 4 — Additive**
-Add a `displayName` to the component returned by `withLoading` so it appears
-as `withLoading(ExerciseList)` in React DevTools rather than just `Component`.
-Why does this matter in practice?
+**Challenge 4 — Analytical**
+The `use` prefix is a convention, not syntax. What happens if you rename
+`useFetch` to `fetchData` and call it inside a component? Try it — what does
+the linter say, and why?
 
 **Challenge 5 — Additive (stretch)**
-Write a second HOC — `withErrorBoundary` — that catches rendering errors in
-its wrapped component and displays a fallback UI instead of crashing the page.
-React provides a specific API for this — find it in the documentation.
+Write a second custom hook — `useDebounce(value, delay)` — that returns a
+debounced version of any value. Wire it into the `ExerciseList` filter so the
+list only updates 300ms after the user stops typing. This is the debounce
+technique flagged in phase 06 — now the hook pattern makes it composable.
 
 ---
 
@@ -288,10 +292,11 @@ React provides a specific API for this — find it in the documentation.
    you could restrict a route to authenticated users only?
 2. Tokens carry identity. Where would a token live in a browser application,
    and why does the answer matter for security? What are the tradeoffs between
-   storing it in memory, in `localStorage`, and in a cookie?
-3. The HOC pattern keeps growing useful as the app gains features. What other
-   cross-cutting concerns in this app — things that are not specific to exercises
-   or sessions — might eventually be expressed as HOCs?
+   storing a token in memory, in `localStorage`, and in a cookie?
+3. `useFetch` fires a new request every time the component mounts. If the user
+   navigates away and back, the list re-fetches. What would a caching layer
+   need to do to prevent that, and at what point does it become complex enough
+   to justify a dedicated library?
 
 ---
 
