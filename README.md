@@ -80,23 +80,29 @@ they operate on.
 
 ## 💡 Why controlled inputs
 
-An uncontrolled input stores its value in the DOM. To read it you reach in
-with a ref: `inputRef.current.value`. That is fine for one-off reads — a
-form submission, for instance. But it makes derived state hard: every time
-you want the filtered list you have to query the DOM, and the filtered list
-does not update automatically as the user types.
+There are three approaches to forms in React, each a step further from the DOM.
 
-A controlled input stores its value in React state. The `value` prop sets
-what the input displays; `onChange` fires on every keystroke and updates
-the state. Because the filter values are now just state variables, the
-filtered list is just a derived computation — an `.filter()` call that runs
-on every render. No DOM reads, no side effects. The list stays in sync
-automatically.
+**Uncontrolled inputs** let the DOM own the value. You read it with a ref
+(`inputRef.current.value`) when you need it — typically on submit. Simple to
+set up, but hard to compose: derived state requires querying the DOM on demand,
+and there is no automatic re-render when the value changes.
 
-This is the core trade-off: controlled inputs give React full authority over
-form state, which makes derived computations trivial at the cost of wiring up
-`onChange` for every input. Uncontrolled inputs are simpler to set up but
-harder to compose with the rest of the application.
+**Controlled inputs** put the value in React state. The `value` prop sets what
+the input displays; `onChange` fires on every keystroke and keeps state in sync.
+Because the filter values are now just state variables, the filtered list is a
+derived computation — an `.filter()` call that runs on every render. No DOM
+reads, no side effects. This is what we build in this phase.
+
+**Form libraries** (React Hook Form, for example) sit above both. They manage
+controlled inputs under the hood, add validation, track dirty and touched state,
+and hand you a clean form object on submit — without you wiring up `onChange`
+for every field. When a form grows beyond a few inputs, this is where the
+boilerplate becomes painful enough to justify the library. We will use React
+Hook Form when we build the session creation form in phase 10. By then, having
+written the wiring by hand, the library will make immediate sense.
+
+This phase uses controlled inputs. The goal is to understand what the library
+is doing before we let it do it.
 
 ---
 
@@ -253,9 +259,12 @@ Implement it without a library — a `setTimeout` and `clearTimeout` inside
    identical — `isLoading`, `error`, the same conditional returns. Every new
    component that fetches data will repeat it. What is the minimal abstraction
    that removes the duplication without hiding what is happening?
-3. The category dropdown is populated from a hardcoded list right now.
-   A better approach would be to derive the available categories from the
-   fetched exercises. What are the tradeoffs?
+3. The filter works on data already in memory — all exercises were fetched
+   upfront and the filter narrows that set client-side. The alternative is to
+   pass filter values as query parameters to the API (`GET /exercises?name=squat`)
+   and let the server return only the matching records. When would client-side
+   filtering be the wrong choice, and what would the frontend need to change to
+   support server-side filtering instead?
 
 ---
 
