@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react'
 import type { Exercise } from '../types/exercise'
 import ExerciseListItem from './ExerciseListItem'
+import ExerciseFilter from './ExerciseFilter'
 import { getExercises } from '../services/exerciseService'
 
 /*
- * selectedId and onSelect are gone. ExerciseList no longer coordinates with
- * a sibling detail panel — there is no sibling. Each list item is a Link and
- * navigating to an exercise is entirely self-contained in ExerciseListItem.
- * This component's only job is to fetch and render the list.
+ * ExerciseList owns both the fetched data and the filter state — they live
+ * together because both are needed to compute what gets rendered. The filtered
+ * list is not stored in state: it is derived fresh on every render from the
+ * full exercises array and the current filter values. Storing it separately
+ * would mean keeping two pieces of state in sync, which is a source of bugs.
+ *
+ * categories is also derived — unique values extracted from the fetched data
+ * so the dropdown always reflects what the API actually returns.
  */
 function ExerciseList() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [filterText, setFilterText] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
 
   useEffect(() => {
     getExercises()
@@ -57,12 +64,29 @@ function ExerciseList() {
     )
   }
 
+  const categories = [...new Set(exercises.map((ex) => ex.category))].sort()
+
+  const filteredExercises = exercises.filter((ex) => {
+    const matchesText = ex.name.toLowerCase().includes(filterText.toLowerCase())
+    const matchesCategory = filterCategory === '' || ex.category === filterCategory
+    return matchesText && matchesCategory
+  })
+
   return (
-    <ul className="flex flex-col gap-4">
-      {exercises.map((exercise) => (
-        <ExerciseListItem key={exercise.id} exercise={exercise} />
-      ))}
-    </ul>
+    <>
+      <ExerciseFilter
+        filterText={filterText}
+        filterCategory={filterCategory}
+        categories={categories}
+        onTextChange={setFilterText}
+        onCategoryChange={setFilterCategory}
+      />
+      <ul className="flex flex-col gap-4">
+        {filteredExercises.map((exercise) => (
+          <ExerciseListItem key={exercise.id} exercise={exercise} />
+        ))}
+      </ul>
+    </>
   )
 }
 

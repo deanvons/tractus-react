@@ -238,9 +238,9 @@ Add a clear button that resets both inputs to their default values with a
 single click.
 
 **Challenge 4 — Additive**
-The category dropdown lists values from the API. Add an "All categories"
-option as the first entry so the user can remove the category filter
-without clearing the whole form.
+Add a result count below the filter that shows "Showing X of Y exercises".
+Where does this value come from — does it need its own state, or is it
+already available?
 
 **Challenge 5 — Additive (stretch)**
 The filter runs on every keystroke. For a large list this could be slow.
