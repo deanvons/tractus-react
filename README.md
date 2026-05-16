@@ -12,6 +12,11 @@ in this phase — not the DOM. That single decision is what makes the
 filtered list update automatically on every keystroke, with no need to reach
 into the DOM to read what the user typed.
 
+> **A note on scope.** This phase covers read-only filtering — inputs that
+> narrow an existing dataset. Form submission (POSTing new data to the API)
+> arrives in phase 10 with the session creation form, where we also introduce
+> React Hook Form for validation and submit handling.
+
 ---
 
 ## 🗺️ Contents
@@ -187,18 +192,26 @@ in state.
 
 ```mermaid
 graph TD
+  App["App\n(route definitions)"]
   ListPage["ExerciseListPage\n(path='/')"]
   ExList["ExerciseList\n(owns filter state + data)"]
   ExFilter["ExerciseFilter\n(controlled inputs)"]
   ELI1["ExerciseListItem"]
   ELI2["ExerciseListItem"]
   ELIn["…"]
+  DetailPage["ExerciseDetailPage\n(path='/exercises/:id')"]
+  ExDetail["ExerciseDetail"]
+  NotFound["NotFoundPage\n(path='*')"]
 
+  App -->|"route '/'"| ListPage
+  App -->|"route '/exercises/:id'"| DetailPage
+  App -->|"route '*'"| NotFound
   ListPage --> ExList
   ExList -->|"filterText, filterCategory\nonChange handlers"| ExFilter
   ExList --> ELI1
   ExList --> ELI2
   ExList --> ELIn
+  DetailPage -->|"id prop"| ExDetail
 ```
 
 `ExerciseList` is the container — it holds state and passes it down.
