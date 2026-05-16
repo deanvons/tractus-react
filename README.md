@@ -1,23 +1,16 @@
 # Tractus Frontend
 
-> **Phase 05 — Routing** | Tractus Frontend · Web Dev Bootcamp
+> **Phase 06 — Forms** | Tractus Frontend · Web Dev Bootcamp
 
-React Router turns a single-page application into one that feels like a
-multi-page website — with real URLs, back button support, and deep-linkable views.
+The exercise list works, but it has no way to narrow down. A user with
+fifty exercises has no choice but to scroll through all of them. This phase
+adds a filter panel above the list — a text input for name and a dropdown
+for category. As the user types or selects, the list updates immediately.
 
-The app so far is one screen. Clicking an exercise highlights it in a sidebar
-panel, but the URL never changes. There is no way to link directly to an
-exercise, no back button history, and no concept of "pages". React Router
-changes all of that. Each view gets its own URL. Navigation becomes a first-class
-concern. The component that renders depends on the route — not on local state.
-
-This phase also resolves a structural issue from the previous solution: the
-selected exercise was passed from `App` down to `ExerciseDetail` as a prop.
-That works for two levels, but it is the beginning of prop drilling — threading
-state through components that do not need it just to reach one that does.
-React Router sidesteps this for navigation state by putting the selection in
-the URL instead. The general problem of shared state across distant components
-is addressed properly in phase 12 with Redux.
+The mechanism is the controlled input. React owns the value of every input
+in this phase — not the DOM. That single decision is what makes the
+filtered list update automatically on every keystroke, with no need to reach
+into the DOM to read what the user typed.
 
 ---
 
@@ -25,7 +18,7 @@ is addressed properly in phase 12 with Redux.
 
 - [Branch sequence](#-branch-sequence)
 - [Resolving the thought pieces](#-resolving-the-thought-pieces)
-- [Why React Router](#-why-react-router)
+- [Why controlled inputs](#-why-controlled-inputs)
 - [What we built in the previous branch](#-what-we-built-in-the-previous-branch)
 - [What we're doing in this branch](#-what-were-doing-in-this-branch)
 - [The abstraction we earned](#-the-abstraction-we-earned)
@@ -47,8 +40,8 @@ is addressed properly in phase 12 with Redux.
 | `phase-02_react_props-and-lists` | Props, component tree, rendering lists, keys | Hardcoded data |
 | `phase-03_react_state-and-events` | `useState`, event handlers, local interactivity | Hardcoded data |
 | `phase-04_react_effects-and-fetch` | `useEffect`, fetch, lifecycle, loading/error state | Live API data |
-| `📌 phase-05_routing_react-router` | **React Router, multi-page SPA, route params, nav** | Live API data |
-| `phase-06_forms_controlled-inputs` | Controlled inputs, filter form, form submission | Live API data |
+| `phase-05_routing_react-router` | React Router, multi-page SPA, route params, nav | Live API data |
+| `📌 phase-06_forms_controlled-inputs` | **Controlled inputs, filter form, derived state** | Live API data |
 | `phase-07_react_hoc-pattern` | Higher-order components, `withLoading` wrapper | Live API data |
 | `phase-08_auth_keycloak-pkce` | Keycloak, auth code + PKCE, login/logout | Auth wall |
 | `phase-09_auth_protected-routes` | HOC as auth guard, redirect to login, token header | Auth wall |
@@ -60,105 +53,101 @@ is addressed properly in phase 12 with Redux.
 
 ## ✅ Resolving the thought pieces
 
-### A URL like `/exercises/123` — what would need to exist?
+### The exercise list loads every time the user navigates back to `/` — when is that right?
 
-We resolve it here. React Router maps URL patterns to components. The pattern
-`/exercises/:id` matches any exercise URL and makes the `id` segment available
-to the component via `useParams`. The component fetches the exercise for that
-ID and renders it. The URL is the state — no prop threading required.
+Still the case, and deliberately so. The filter resets on navigation too — a
+fresh visit to the list gives you the full unfiltered list. For an exercise
+catalogue that changes rarely, re-fetching every visit is wasteful but not
+broken. When the cost becomes visible — a slow network, a long list, a user
+who navigates back constantly — caching belongs to a data-fetching library.
+The friction will be clear enough when we reach it.
 
-### Prop drilling — state passed through components that don't need it
+### Both `ExerciseList` and `ExerciseDetail` have their own loading and error states — what would it take to avoid repeating that logic?
 
-The phase-04 challenge solution passed `selectedExercise` from `App` down to
-`ExerciseDetail`. Two levels is manageable; five levels is not. This is prop
-drilling — and it is a real problem as the component tree grows. React Router
-eliminates it for navigation state by replacing the sidebar panel with a
-dedicated route. The general solution for other shared state (auth, session
-data) is Redux, introduced in phase 12.
+Still deferred. This phase adds more state to `ExerciseList` and makes the
+duplication more obvious. That friction is the setup for phase 07, where a
+higher-order component extracts the shared pattern once and applies it to
+any component that fetches data.
 
-### Service module memory between calls
+### The app has exercises but no way to search or filter them — what would a filter form need, and where would it live?
 
-Still deferred. Two components calling the same service function independently
-will fire two separate requests. That is inefficient but not broken. Caching
-and request deduplication belong to a data-fetching library — the friction will
-be clear enough by the time we reach that point.
+We resolve it here. The filter needs two inputs — a text field for name and
+a dropdown for category — and their values need to be accessible wherever
+the filtering logic runs. Both live in `ExerciseList`, alongside the data
+they operate on.
 
 ---
 
-## 💡 Why React Router
+## 💡 Why controlled inputs
 
-Without a router, the browser's URL never changes. Every view is produced by
-local state — a boolean flag, a selected ID — and the URL stays the same
-regardless of what the user is looking at. That means no bookmarks, no shared
-links, no back button, and no way to land directly on a specific exercise.
+An uncontrolled input stores its value in the DOM. To read it you reach in
+with a ref: `inputRef.current.value`. That is fine for one-off reads — a
+form submission, for instance. But it makes derived state hard: every time
+you want the filtered list you have to query the DOM, and the filtered list
+does not update automatically as the user types.
 
-React Router maps URL patterns to components. When the URL is `/`, render the
-list. When the URL is `/exercises/123`, render the detail view for exercise 123.
-The URL becomes the source of truth for what is on screen — not a state variable
-in a component.
+A controlled input stores its value in React state. The `value` prop sets
+what the input displays; `onChange` fires on every keystroke and updates
+the state. Because the filter values are now just state variables, the
+filtered list is just a derived computation — an `.filter()` call that runs
+on every render. No DOM reads, no side effects. The list stays in sync
+automatically.
 
-Without React Router we would manage URL changes with `window.history.pushState`
-and `window.location` directly, parsing the pathname manually to decide what to
-render. React Router automates that. By this point, having written the pattern
-manually would be tedious enough that the library earns its place.
+This is the core trade-off: controlled inputs give React full authority over
+form state, which makes derived computations trivial at the cost of wiring up
+`onChange` for every input. Uncontrolled inputs are simpler to set up but
+harder to compose with the rest of the application.
 
 ---
 
 ## ⏮️ What we built in the previous branch
 
-Phase 04 replaced hardcoded data with a real fetch via `useEffect`. The app
-shows a live list of exercises with loading, error, and success states. Clicking
-an exercise passes the selection up to `App`, which renders `ExerciseDetail` as
-a sidebar panel. The URL never changes.
+Phase 05 added React Router. The app now has real URLs — `/` for the list
+and `/exercises/:id` for the detail view. Clicking an exercise navigates
+rather than selecting. The URL is the state. Page components bridge the URL
+to the components that own the logic.
 
 ---
 
 ## 🎯 What we're doing in this branch
 
-- Install React Router and wrap the app in `BrowserRouter`
-- Define routes in `App`: `/` for the list, `/exercises/:id` for the detail
-- Remove the sidebar `ExerciseDetail` panel — detail is now a separate route
-- Add `Link` to `ExerciseListItem` so clicking navigates rather than selects
-- Create `ExerciseDetailPage` that reads the ID from `useParams` and fetches the exercise
-- Remove `selectedExercise` state from `App` — the URL carries the selection now
+- Add an `ExerciseFilter` component with a controlled text input and a controlled category dropdown
+- Filter state (`filterText`, `filterCategory`) lives in `ExerciseList` alongside the data it filters
+- Derive the visible list from the full exercise array and the current filter values on each render
+- Pass filter values and `onChange` handlers down to `ExerciseFilter` as props
 
 ---
 
 ## 🏆 The abstraction we earned
 
-> React Router abstracts the browser's History API — the mechanism that lets
-> JavaScript applications change the URL without a full page reload. Without it,
-> every navigation would require `window.history.pushState`, manual URL parsing,
-> and a custom mechanism to re-render the right component. React Router handles
-> all of that and gives us a declarative API: define which component maps to
-> which URL pattern, and the framework does the rest. The same principle applies
-> here as everywhere else in this course — understand what the library is doing
-> before you let it do it for you.
+> Controlled inputs are not a React-specific idea — they are the general
+> principle of single source of truth applied to form fields. The DOM has
+> always had its own opinion about what an input contains; controlled inputs
+> override that opinion and hand authority to the application. Once the value
+> lives in state, everything that depends on it — validation, derived lists,
+> conditional UI — becomes a straightforward computation rather than a DOM
+> query. The cost is boilerplate: every input needs a `value` and an
+> `onChange`. That cost is why form libraries exist. By this point, having
+> written the wiring by hand, the library will make immediate sense.
 
 ---
 
 ## 🧑🏻‍🏫 Learning goals
 
 ### Understand
-- **Explain** what a single-page application is and how React Router simulates
-  navigation without a full page reload.
-- **Describe** why putting the selected exercise in the URL is better than
-  keeping it in component state.
+- **Explain** the difference between a controlled and an uncontrolled input.
+- **Describe** what derived state is and why it does not need its own `useState`.
 
 ### Apply
-- **Define** routes using `<Routes>` and `<Route>` and map them to components.
-- **Use** `useParams` to read a URL segment inside a component.
-- **Navigate** programmatically and declaratively using `Link` and `useNavigate`.
+- **Wire up** a controlled input with `value` and `onChange`.
+- **Derive** a filtered list from state without storing the filtered result in state.
 
 ### Analyze
-- **Examine** what the browser's History API does and identify where React
-  Router sits on top of it.
-- **Identify** what was lost by removing the sidebar panel and what was gained
-  by giving the detail view its own URL.
+- **Examine** where filter state lives and explain why that component is the right owner.
+- **Identify** when uncontrolled inputs are the better choice.
 
 ### Evaluate
-- **Assess** the tradeoff between URL-based state and component state — when
-  should something live in the URL and when should it stay local?
+- **Assess** the tradeoff between controlled and uncontrolled inputs for different form scenarios.
 
 ---
 
@@ -166,89 +155,50 @@ a sidebar panel. The URL never changes.
 
 | Concept | Plain English |
 |---|---|
-| **SPA** | Single-page application. One HTML file, JavaScript renders the UI. The browser never does a full reload — React Router intercepts navigation and swaps components instead. |
-| **`BrowserRouter`** | The provider component that gives the rest of the app access to routing. Wraps the entire application, usually in `main.tsx`. |
-| **`Routes` / `Route`** | Declarative route definitions. `<Route path="/exercises/:id" element={<ExerciseDetailPage />} />` maps a URL pattern to a component. |
-| **Route param** | A named segment in a URL pattern (`:id`). React Router captures its value and makes it available via `useParams`. |
-| **`useParams`** | A hook that returns the current route's params as an object. Inside `/exercises/:id`, `useParams().id` gives you the exercise ID. |
-| **`Link`** | A component that renders an anchor tag but uses React Router's history instead of a full browser navigation. |
-| **`useNavigate`** | A hook that returns a function for programmatic navigation — for when you need to navigate as a result of an event, not a click on a link. |
-| **Prop drilling** | Passing state through intermediate components that do not use it, just to reach a deeply nested one. The URL eliminates it for navigation state. Redux eliminates it for shared application state (phase 12). |
+| **Controlled input** | An input whose value is set by a React state variable via the `value` prop. `onChange` keeps state in sync on every keystroke. React is the single source of truth. |
+| **Uncontrolled input** | An input whose value lives in the DOM. Read via a ref when needed — not on every keystroke. Simpler to set up; harder to compose. |
+| **`onChange`** | The event handler fired on every input change. Receives a `SyntheticEvent`; read the current value from `event.target.value`. |
+| **Derived state** | A value computed from existing state on each render. The filtered exercise list is derived — it does not need its own `useState`, just a `.filter()` call before the return. |
+| **`select` element** | The HTML dropdown. Works like a controlled input — give it a `value` and an `onChange`, and React owns the selection. |
 
 ---
 
 ## 🔍 What to notice in the code
 
-**[`src/main.tsx`](src/main.tsx)**
-`BrowserRouter` wraps the entire app here. This is where React Router's context
-is established — every component inside can access routing hooks and respond to
-URL changes.
+**[`src/components/ExerciseFilter.tsx`](src/components/ExerciseFilter.tsx)**
+A presentational component — no state of its own. It receives the current filter
+values and the `onChange` handlers as props and renders two inputs. The parent
+owns the state; this component only renders the controls and reports changes.
 
-**[`src/App.tsx`](src/App.tsx)**
-Compare this file to the phase-04 version. The `selectedExercise` state is gone.
-`App` no longer coordinates between components — it declares a route map and
-nothing else. Two routes, two page components. That is its entire job.
-
-**[`src/pages/ExerciseListPage.tsx`](src/pages/ExerciseListPage.tsx)**
-A page component with no logic — it applies the layout and renders `ExerciseList`.
-Pages own the shell; components own the content.
-
-**[`src/components/ExerciseListItem.tsx`](src/components/ExerciseListItem.tsx)**
-`onClick` is replaced by a `Link` to `/exercises/:id`. The component no longer
-calls a callback — it navigates. The parent does not need to know a click
-happened.
-
-**[`src/pages/ExerciseDetailPage.tsx`](src/pages/ExerciseDetailPage.tsx)**
-The page's only job is to read the URL param and pass the `id` to `ExerciseDetail`.
-No fetch, no state, no rendering logic — just bridging the URL to the component.
-
-**[`src/components/ExerciseDetail.tsx`](src/components/ExerciseDetail.tsx)**
-Receives `id` as a prop and owns everything else: fetching the exercise, managing
-loading and error states, rendering the card. The same fetch pattern as
-`ExerciseList`, applied to a single resource.
+**[`src/components/ExerciseList.tsx`](src/components/ExerciseList.tsx)**
+Filter state sits here alongside the fetched data, because this is where both
+are needed to compute what gets rendered. Before mapping over exercises, a
+`.filter()` call derives the visible subset. No new `useState` for the filtered
+list — it is computed fresh on every render from the values that are already
+in state.
 
 **Component tree**
 
 ```mermaid
 graph TD
-  BrowserRouter["BrowserRouter\n(main.tsx)"]
-  App["App\n(route definitions)"]
   ListPage["ExerciseListPage\n(path='/')"]
-  ExList["ExerciseList"]
+  ExList["ExerciseList\n(owns filter state + data)"]
+  ExFilter["ExerciseFilter\n(controlled inputs)"]
   ELI1["ExerciseListItem"]
   ELI2["ExerciseListItem"]
   ELIn["…"]
-  DetailPage["ExerciseDetailPage\n(path='/exercises/:id')"]
-  ExDetail["ExerciseDetail"]
 
-  BrowserRouter --> App
-  App -->|"route '/'"| ListPage
-  App -->|"route '/exercises/:id'"| DetailPage
   ListPage --> ExList
-  DetailPage -->|"id prop"| ExDetail
-  ExList -->|"Link /exercises/:id"| ELI1
+  ExList -->|"filterText, filterCategory\nonChange handlers"| ExFilter
+  ExList --> ELI1
   ExList --> ELI2
   ExList --> ELIn
 ```
 
-The router sits above `App` in the tree. `App` no longer holds state — it holds
-routes. Pages bridge the URL to components; components own the logic and markup.
-Note: component diagrams conventionally show structure only. The route paths and
-Link labels are here because making the routing relationships explicit is the
-point of this phase.
-
----
-
-## 🌐 What the frontend revealed
-
-`ExerciseDetailPage` needs `GET /exercises/:id`. If the backend does not expose
-this endpoint, the detail page cannot load data — the list gives us IDs but no
-way to retrieve a single exercise.
-
-> **API LEARNING MOMENT:** Does `GET /exercises/:id` exist in the Tractus API?
-> Check the Swagger UI at `http://localhost:8080/swagger-ui/index.html`. If it
-> does not exist, what would the response shape need to look like, and what HTTP
-> status should it return for an unknown ID?
+`ExerciseList` is the container — it holds state and passes it down.
+`ExerciseFilter` is presentational — it renders inputs and reports changes
+upward via callbacks. The same container/presentational split introduced in
+phase 02 applied to a form.
 
 ---
 
@@ -268,47 +218,46 @@ App runs at `http://localhost:5173`.
 ## ✏️ Challenges for students
 
 **Challenge 1 — Analytical**
-Open the browser and navigate to an exercise detail page. Copy the URL and open
-it in a new tab. What happens? Now try the same thing with the phase-04 version
-where selection was local state. What is the fundamental difference, and why
-does it matter for real applications?
+The filter resets every time the user navigates away and returns. Why?
+What would need to change to preserve the filter across navigation?
+Would you store the filter in component state, the URL, or somewhere else?
 
 **Challenge 2 — Analytical**
-`useParams` returns `{ id: string | undefined }`. Why might `id` be undefined,
-and how does `ExerciseDetailPage` handle that case? What would happen if you
-did not guard against it?
+The text filter matches on `exercise.name`. What other fields would be
+useful to search across, and what are the tradeoffs of matching on multiple
+fields simultaneously?
 
-**Challenge 3 — Analytical**
-`App` no longer holds `selectedExercise` state. Where does the "which exercise
-is selected" information live now? What are the tradeoffs of storing navigation
-state in the URL versus in a component?
+**Challenge 3 — Additive**
+Add a clear button that resets both inputs to their default values with a
+single click.
 
 **Challenge 4 — Additive**
-Add a catch-all route to `App` that renders a simple "Page not found" message
-for any URL that does not match the defined routes. React Router has specific
-syntax for this — check the documentation.
+The category dropdown lists values from the API. Add an "All categories"
+option as the first entry so the user can remove the category filter
+without clearing the whole form.
 
 **Challenge 5 — Additive (stretch)**
-The exercise list has no indication of which item the user last visited. Add an
-`active` style to the `Link` in `ExerciseListItem` when its route is the current
-URL. React Router provides a component that makes this straightforward — find it
-in the documentation.
+The filter runs on every keystroke. For a large list this could be slow.
+Add a debounce so the filter only applies 300ms after the user stops typing.
+Implement it without a library — a `setTimeout` and `clearTimeout` inside
+`useEffect` is enough.
 
 ---
 
 ## 💭 Thought pieces for the next branch
 
-1. The exercise list loads every time the user navigates back to `/`. There is
-   no memory of the previous fetch — the data is re-requested on every visit.
-   When would that be the right behaviour, and when would it be wasteful?
-2. Both `ExerciseList` and `ExerciseDetail` now have their own loading and
-   error states. As more components are added, this pattern will repeat. What would
-   it take to avoid writing the same loading and error logic every time?
-3. The app has exercises but no way to search or filter them. A user with a long
-   exercise list has no choice but to scroll. What would a filter form need —
-   and where in the component tree would it live?
+1. `ExerciseList` now manages fetch state, retry state, and filter state.
+   As more behaviour is added, a component that does this much becomes hard
+   to read and test. What would you extract first, and how?
+2. The loading and error pattern in `ExerciseList` and `ExerciseDetail` is
+   identical — `isLoading`, `error`, the same conditional returns. Every new
+   component that fetches data will repeat it. What is the minimal abstraction
+   that removes the duplication without hiding what is happening?
+3. The category dropdown is populated from a hardcoded list right now.
+   A better approach would be to derive the available categories from the
+   fetched exercises. What are the tradeoffs?
 
 ---
 
-*Previous branch: [`phase-04_react_effects-and-fetch`]*
-*Next branch: [`phase-06_forms_controlled-inputs`]*
+*Previous branch: [`phase-05_routing_react-router`]*
+*Next branch: [`phase-07_react_hoc-pattern`]*
