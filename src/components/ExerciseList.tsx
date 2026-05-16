@@ -72,6 +72,11 @@ function ExerciseList() {
     return matchesText && matchesCategory
   })
 
+  function handleClear() {
+    setFilterText('')
+    setFilterCategory('')
+  }
+
   return (
     <>
       <ExerciseFilter
@@ -80,7 +85,11 @@ function ExerciseList() {
         categories={categories}
         onTextChange={setFilterText}
         onCategoryChange={setFilterCategory}
+        onClear={handleClear}
       />
+      <p className="text-xs text-gray-400 mb-4">
+        Showing {filteredExercises.length} of {exercises.length} exercises
+      </p>
       <ul className="flex flex-col gap-4">
         {filteredExercises.map((exercise) => (
           <ExerciseListItem key={exercise.id} exercise={exercise} />

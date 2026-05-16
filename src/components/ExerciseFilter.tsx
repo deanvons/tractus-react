@@ -4,6 +4,7 @@ interface Props {
   categories: string[]
   onTextChange: (value: string) => void
   onCategoryChange: (value: string) => void
+  onClear: () => void
 }
 
 /*
@@ -12,10 +13,14 @@ interface Props {
  * via callbacks. The same container/presentational split as ExerciseListItem:
  * the child has no opinion about what the values mean, only how to display them.
  */
-function ExerciseFilter({ filterText, filterCategory, categories, onTextChange, onCategoryChange }: Props) {
+function ExerciseFilter({ filterText, filterCategory, categories, onTextChange, onCategoryChange, onClear }: Props) {
+  const isFiltering = filterText !== '' || filterCategory !== ''
+
   return (
     <div className="flex gap-3 mb-6">
+      <label htmlFor="filter-text" className="sr-only">Filter by name</label>
       <input
+        id="filter-text"
         type="text"
         placeholder="Filter by name"
         value={filterText}
@@ -32,6 +37,14 @@ function ExerciseFilter({ filterText, filterCategory, categories, onTextChange, 
           <option key={cat} value={cat}>{cat}</option>
         ))}
       </select>
+      {isFiltering && (
+        <button
+          onClick={onClear}
+          className="text-sm text-gray-500 hover:text-gray-800 underline whitespace-nowrap"
+        >
+          Clear
+        </button>
+      )}
     </div>
   )
 }
